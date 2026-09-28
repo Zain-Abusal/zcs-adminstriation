@@ -1,0 +1,1490 @@
+[
+  {
+    "name": "profiles",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "email",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "full_name",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "discord_handle",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "name": "user_roles",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "categories",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "products",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "summary",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "whats_inside",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "product_type",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "stack",
+        "type": "json",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "tags",
+        "type": "json",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "category_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "price_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "version",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "file_size_bytes",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "license_name",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "license_summary",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "demo_url",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cover_color",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cover_image_path",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "storage_path",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_published",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_featured",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "view_count",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "purchase_count",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "download_count",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "published_at",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "product_media",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "alt",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "sales",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "discount_percent",
+        "type": "number",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sale_price_cents",
+        "type": "number",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "starts_at",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "ends_at",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "name": "coupons",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "code",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "discount_percent",
+        "type": "number",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "discount_cents",
+        "type": "number",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "max_uses",
+        "type": "number",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "used_count",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "starts_at",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "expires_at",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "orders",
+    "mode": "update",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "provider_order_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "subtotal_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "discount_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "total_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "coupon_code",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "name": "order_items",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "order_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "unit_price_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "quantity",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "licenses",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "order_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "license_key",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "downloads",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "license_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "ip_hash",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "name": "newsletter_subscribers",
+    "mode": "update",
+    "fields": [
+      {
+        "name": "email",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "reviews",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "author_name",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "rating",
+        "type": "number",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "headline",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_approved",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "custom_requests",
+    "mode": "update",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "work_type",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "discord_handle",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "budget_range",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "timeline",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "brief",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "reference_links",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "blog_posts",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "excerpt",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cover_color",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "author_name",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_published",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "published_at",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cover_image_url",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "cover_image_alt",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "name": "blog_reads",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "day",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "reader_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "device_type",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "ip_hash",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "is_bot",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "opens",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "read_seconds",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "faq_items",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "question",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "answer",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "legal_pages",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "team_members",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "role_title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "bio",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "initials",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "links",
+        "type": "json",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_owner",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "docs_pages",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "section",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "summary",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_published",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "changelog_entries",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "version",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "released_on",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_published",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "pricing_plans",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "price_label",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "price_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cadence",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "tagline",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "features",
+        "type": "json",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cta_label",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cta_href",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_featured",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "services",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "price_label",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "price_cents",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cadence",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "tagline",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "summary",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "deliverables",
+        "type": "json",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "features",
+        "type": "json",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "external_url",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "cta_label",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_featured",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "page_view_daily",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "day",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "path",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "source_detail",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "device_type",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_bot",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "pageviews",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "page_view_visitor_daily",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "day",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "visitor_hash",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "device_type",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_bot",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "pageviews",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "news_entries",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "summary",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_published",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "published_on",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "blog_media",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "post_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "alt",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "caption",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "broadcast_log",
+    "mode": "read",
+    "fields": [
+      {
+        "name": "kind",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "ref_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "recipients",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "failed",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "sent_at",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "sale_events",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "starts_at",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "ends_at",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "default_discount_percent",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "name": "sale_entries",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "sale_event_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "product_id",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "discount_percent",
+        "type": "number",
+        "required": false,
+        "nullable": true
+      }
+    ]
+  },
+  {
+    "name": "homepage_reviews",
+    "mode": "write",
+    "fields": [
+      {
+        "name": "author_name",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "avatar_url",
+        "type": "text",
+        "required": false,
+        "nullable": true
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "required": true,
+        "nullable": false
+      },
+      {
+        "name": "product_type",
+        "type": "text",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "rating",
+        "type": "number",
+        "required": false,
+        "nullable": false
+      }
+    ]
+  }
+]
