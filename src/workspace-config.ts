@@ -1,6 +1,11 @@
 import schema from "./resources.json";
 export type Row = Record<string, any>;
-export type Field = { name: string; type: string; required: boolean; nullable: boolean };
+export type Field = {
+  name: string;
+  type: string;
+  required: boolean;
+  nullable: boolean;
+};
 export type Resource = {
   name: string;
   label: string;
@@ -373,7 +378,11 @@ export const hints: Record<string, string> = {
   external_url: "The marketplace page where customers complete checkout.",
   price_cents: "Enter the amount in the selected currency, e.g. 12.50.",
   sort_order: "Lower numbers appear first.",
-  cover_image_path: "A product-images storage path or a full image URL.",
+  cover_image_path: "Path to an image in the product-images storage bucket.",
+  cover_image_url:
+    "Paste a direct image URL from any website (https://…). External links are supported.",
+  avatar_url: "A direct HTTP or HTTPS image link.",
+  url: "A direct image link. External image hosts are supported.",
   storage_path: "Path to the file in the private product-files bucket.",
   links: "A JSON object mapping each social name to its URL.",
   banner_content_md: "Supports Markdown links, bold text, and emphasis.",
@@ -419,7 +428,11 @@ export function newRecord(resource: Resource): Row {
   }
   if (resource.fields.some((f) => f.name === "currency")) row.currency = "USD";
   if (resource.name === "products")
-    Object.assign(row, { checkout_type: "external", product_type: "plugin", price_cents: 0 });
+    Object.assign(row, {
+      checkout_type: "external",
+      product_type: "plugin",
+      price_cents: 0,
+    });
   if (resource.name === "user_roles") row.role = "user";
   if (resource.name === "site_settings")
     Object.assign(row, { banner_tone: "cyan", banner_enabled: false });

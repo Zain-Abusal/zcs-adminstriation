@@ -1,4 +1,4 @@
-@import "../../src/styles.css";
+@import "./shared/styles.css";
 @source './';
 /* Layout only: controls, panels, type and colors come from the site kit. */
 .login {

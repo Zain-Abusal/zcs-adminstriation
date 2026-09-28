@@ -1,52 +1,68 @@
-# ZCraft administration
+# ZCraft admin workspace
 
-Separate Vite/React site in `admin/`, using the existing Supabase project, SQL tables, `has_role` RPC, and RLS policies. Imports the storefront's Button, Panel, Field, Eyebrow, Chip, SectionHeading, input styles, and ToastProvider directly. Vite deduplicates React so shared components use the admin app's React instance. Keep this folder inside the repository so those shared imports resolve.
+A standalone Vite/React admin site using the storefront's existing Supabase database and admin roles. This repository builds independently: all shared ZCraft components, branding, icons, styles, and Markdown rendering are checked in under `src/shared/`.
 
-## Run
+## Run locally
 
-Use Node 22.12+ (or a supported newer release):
+Use Node 24 (Node 22.18+ also supports the test suite):
 
 ```sh
-cd admin
 npm ci
 cp .env.example .env.local
-# Fill in the same Supabase URL and public/publishable key as the storefront.
+# Fill in the storefront's Supabase URL and PUBLIC/publishable key.
 npm run dev
 ```
 
-Never put a service-role or secret key in frontend environment variables.
+Do not use a secret or service-role key in frontend configuration.
 
-## Vercel
+## Deploy this repository to Vercel
 
-Create a **separate Vercel project** from this repository. Set Root Directory to `admin`, enable **Include source files outside of the Root Directory in the Build Step**, and select Vite. Install: `npm ci`; build: `npm run build`; output: `dist`. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to the desired environments, then deploy. The main site's Vercel configuration is unchanged.
+- Root Directory: the repository root (`.`), not `admin`.
+- Framework: Vite.
+- Install command: `npm ci`.
+- Build command: `npm run build`.
+- Output directory: `dist`.
+- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for the deployment environment.
+- Commit `src/shared/`, `package-lock.json`, fonts, and image assets along with the application.
 
-For reduced discoverability, use a private hostname and enable Vercel Deployment Protection on all environments available to your plan. No public site links or sitemap entries are added. Robots.txt, HTML robots metadata, and X-Robots-Tag request no indexing. These directives are advisory: a publicly accessible login page cannot be guaranteed undiscoverable. Vercel protection restricts access to the shell itself; Supabase RLS protects database operations.
+There are no build-time imports from the original storefront and no requirement to include files outside this repository. The previous TS2307 errors came from `@/*` pointing to `../src`; it now points to `./src/shared/*`.
 
-## Database and admin access
+No-index metadata, robots.txt, and response headers are included. Enable Vercel Deployment Protection if the login page itself should be inaccessible to the public; no-index directives alone cannot guarantee an undiscoverable URL.
 
-Use the existing database, not a second copy. Ensure the repository's existing migrations are applied, including `20260807130000_admin_panel_access.sql`, `20260807140000_fix_admin_roles_and_profiles.sql`, and `20260928135457_standalone_admin_access.sql`. The new migration grants news write privileges; the existing admin-only RLS policy still controls access. It has not been applied remotely by this change.
+## Workspace
 
-Create or invite the account through Supabase Auth, then grant its verified user ID the admin role in the trusted Supabase SQL editor:
+- Overview with live counts, recent products, incoming briefs, and a traffic chart.
+- Grouped navigation for catalog, content, community, insights, and workspace settings.
+- Search across all matching records, status filters, sorting, and pagination.
+- Side-panel editors with named sections, draft defaults, product/account selectors, dollar-style amount entry stored as cents, and one-item-per-line list inputs.
+- Preview mode for content, cover images, and Markdown images. Blog cover/gallery URLs can use any HTTP(S) image host. Use direct image URLs; the source host must allow embedding.
+- Save/error toasts, unsaved-change protection, delete confirmation, keyboard-accessible dialogs, and reduced-motion support.
+- Page-traffic and article-engagement charts for 7/14/30/90 days, optional bot inclusion, top pages/articles, and accessible daily values. UTC date grouping. Reads are capped at 10,000 records with an explicit partial-data notice; use a shorter range when needed.
+- Announcement banner editing and existing-account role management.
 
-```sql
-insert into public.user_roles (user_id, role)
-values ('REPLACE_WITH_AUTH_USER_UUID', 'admin')
-on conflict (user_id, role) do nothing;
+Legacy orders, order items, licenses, downloads, coupons, product media, and changelog are intentionally excluded from navigation. No database tables are deleted. Existing user profiles remain available for account selectors. Paid checkout continues on external marketplaces.
+
+## Database access
+
+Connect to the existing project with its existing schema and RLS policies. The account must already exist in Supabase Auth and have an `admin` entry in `public.user_roles`. Login does not create accounts or grant privileges. `has_role` and RLS remain the authorization boundary; no secret key is bundled.
+
+Use the storefront repository's existing migrations for schema setup, including admin access, site settings, and news-write grants. This UI change does not apply migrations remotely.
+
+## Keep the shared UI in sync
+
+The shared files are copies of the original storefront implementation, not a new component library. To refresh them when the original UI changes:
+
+```sh
+npm run sync:shared -- /absolute/path/to/zcs/src
 ```
 
-The app has password login only, no registration or self-promotion. Existing Supabase passwords work on this separate origin, but browser sessions are separate. Sessions use sessionStorage. Access is verified against Auth and `has_role` before loading or writing records and periodically while open. RLS remains the authoritative enforcement layer. Manage password resets/invites through Supabase Auth; no third-party auth or email bridge is introduced.
+Review and commit the updated `src/shared` files. This script is an explicit maintenance step and is never required during a Vercel build.
 
-## Features
+## Verify
 
-- Create, edit, and delete products, categories, media, services, pricing, promotions, coupons, blog posts, news, FAQs, legal pages, docs, changelog, team, reviews, licenses, and roles.
-- Edit orders, request status/details, and newsletter subscriber records.
-- Inspect profiles, order items, downloads, broadcasts, and analytics without write controls.
-- Paginated records, current-page filtering, refresh, delete confirmation, save/error feedback.
-- List storage folders and upload new product images or private product files. Copy the displayed storage path into product records; uploads do not overwrite existing files.
-- SQL-aligned field editors: JSON arrays/objects, booleans, numeric fields, text and Markdown. Foreign keys use record UUIDs. Prices use cents. Blank new fields use database defaults; blank nullable existing fields become null.
+```sh
+npm test
+npm run build
+```
 
-Paid checkout remains the product's external marketplace URL. Changing a local order is not an external refund or payment operation. This app does not send broadcasts, manage Supabase infrastructure, or change auth account credentials. Public content changes follow the storefront's existing cache refresh behavior.
-
-## Verification
-
-`npm run build` runs strict TypeScript checks and the production build. `node --test tests/feedback.test.mjs` (Node 22.18+ or 24+) checks configuration validation and actionable login messages. Example environment values are rejected before login; connection failures show both an inline message and the shared error toast. Before production, verify with real test accounts: signed-out and non-admin users cannot enter; an admin can read/save a draft; revoked admin access fails; private uploads remain protected. Database write and role-revocation tests require configured credentials and have not been run against the live database.
+Tests cover field serialization, price conversion, search escaping, external image URLs, date ranges, and chart aggregation. Browser flows should use mocked data or a test project for writes; do not use production records as test fixtures.

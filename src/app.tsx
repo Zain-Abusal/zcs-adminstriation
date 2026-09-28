@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Mail, ShieldCheck, Lock, Eye, EyeOff } from "@/lib/icons";
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site";
 import { Button, Panel, Field, Eyebrow, Chip, SectionHeading, inputClass } from "@/components/kit";
 import { configured, db, requireAdmin, setupError } from "./client";
-import { Dashboard } from "./workspace";
+const Dashboard = lazy(() => import("./workspace").then((m) => ({ default: m.Dashboard })));
 import { useToast } from "@/lib/toast-context";
 import { errorMessage as message } from "./feedback";
 export function App() {
@@ -58,10 +58,17 @@ export function App() {
       if (result.error) throw result.error;
       const user = await requireAdmin();
       setIdentity(user.email || user.id);
-      toast({ title: "Signed in", description: "Your admin workspace is ready." });
+      toast({
+        title: "Signed in",
+        description: "Your admin workspace is ready.",
+      });
     } catch (e) {
       setError(message(e));
-      toast({ title: "Could not sign in", description: message(e), tone: "error" });
+      toast({
+        title: "Could not sign in",
+        description: message(e),
+        tone: "error",
+      });
       await db?.auth.signOut({ scope: "local" });
     } finally {
       setBusy(false);
@@ -187,13 +194,21 @@ export function App() {
       </main>
     );
   return (
-    <Dashboard
-      identity={identity}
-      logout={async () => {
-        const result = await db!.auth.signOut();
-        setIdentity(null);
-        if (result.error) setError(result.error.message);
-      }}
-    />
+    <Suspense
+      fallback={
+        <main className="login">
+          <p role="status">Opening your workspace…</p>
+        </main>
+      }
+    >
+      <Dashboard
+        identity={identity}
+        logout={async () => {
+          const result = await db!.auth.signOut();
+          setIdentity(null);
+          if (result.error) setError(result.error.message);
+        }}
+      />
+    </Suspense>
   );
 }

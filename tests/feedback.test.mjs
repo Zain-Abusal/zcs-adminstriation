@@ -29,7 +29,9 @@ test("auth failures provide actionable and distinct messages", () => {
   );
   assert.match(errorMessage({ message: "Email not confirmed" }), /Confirm your email/);
   assert.match(
-    errorMessage({ message: "Access denied. An administrator account is required." }),
+    errorMessage({
+      message: "Access denied. An administrator account is required.",
+    }),
     /administrator account/,
   );
 });

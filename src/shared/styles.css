@@ -1,0 +1,1105 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@source "./";
+
+@custom-variant dark (&:is(.dark *));
+/*
+ * Self-hosted brand fonts (variable woff2, latin + latin-ext subsets).
+ * Previously these came from fonts.googleapis.com: a render-blocking
+ * stylesheet from a third-party origin that delayed FCP/LCP on slow mobile
+ * networks. Hosting them same-origin removes the extra DNS/TLS round-trip
+ * and the blocking CSS request. The two latin files used above the fold are
+ * preloaded in `__root.tsx`; the ext subsets load only when needed.
+ */
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/space-grotesk-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/space-grotesk-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+/*
+ * ZCraft Studios design system — playful neobrutalist / millennial SaaS.
+ * Ink + paper surfaces, signal-cyan primary with a light-green (lime)
+ * secondary accent, hard black borders, offset drop shadows, 14px radii.
+ */
+
+@theme inline {
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 28px;
+  --radius-4xl: 999px;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-ink: var(--ink);
+  --color-ink-elevated: var(--ink-elevated);
+  --color-paper: var(--paper);
+  --color-paper-elevated: var(--paper-elevated);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-tint: var(--accent-tint);
+  --color-lime: var(--lime);
+  --color-lime-hover: var(--lime-hover);
+  --color-lime-tint: var(--lime-tint);
+  --color-soft-yellow: var(--soft-yellow);
+  --color-soft-coral: var(--soft-coral);
+  --color-soft-mint: var(--soft-mint);
+  --color-hairline: var(--hairline);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --shadow-hard: 4px 4px 0 0 var(--ink);
+  --shadow-hard-sm: 2px 2px 0 0 var(--ink);
+  --shadow-hard-lg: 6px 6px 0 0 var(--ink);
+}
+
+:root {
+  --radius: 14px;
+
+  --ink: oklch(0.1582 0.0072 258.37);
+  --ink-elevated: oklch(0.2037 0.011 260.67);
+  --paper: oklch(0.9673 0.007 88.64);
+  --paper-elevated: oklch(1 0 0);
+  --ink-foreground: oklch(0.9673 0.007 88.64);
+  --ink-muted: oklch(0.7063 0.0123 252.13);
+
+  --accent: oklch(0.7813 0.1199 190.23);
+  --accent-foreground: oklch(0.1582 0.0072 258.37);
+  --accent-hover: oklch(0.7147 0.1117 189.73);
+  --accent-tint: oklch(0.9662 0.0221 189.89);
+
+  --lime: oklch(0.8785 0.1747 137.5);
+  --lime-hover: oklch(0.8231 0.1712 138.2);
+  --lime-tint: oklch(0.9673 0.0552 140.1);
+
+  --soft-yellow: oklch(0.9304 0.0832 91.8);
+  --soft-coral: oklch(0.8715 0.0575 41.27);
+  --soft-mint: oklch(0.9249 0.0391 165.6);
+
+  --background: var(--paper);
+  --foreground: oklch(0.2037 0.011 260.67);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2037 0.011 260.67);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2037 0.011 260.67);
+  --primary: var(--accent);
+  --primary-foreground: oklch(0.1582 0.0072 258.37);
+  --secondary: oklch(0.949 0.0083 91.48);
+  --secondary-foreground: oklch(0.2037 0.011 260.67);
+  --muted: oklch(0.949 0.0083 91.48);
+  --muted-foreground: oklch(0.4898 0.0135 252.2);
+  --destructive: oklch(0.6189 0.1712 33.03);
+  --destructive-foreground: oklch(0.9673 0.007 88.64);
+  --success: oklch(0.6708 0.1306 163);
+  --warning: oklch(0.7087 0.1325 65.07);
+
+  --border: oklch(0.1582 0.0072 258.37);
+  --hairline: oklch(0.9124 0.0097 93.58);
+  --input: oklch(0.1582 0.0072 258.37);
+  --ring: oklch(0.7813 0.1199 190.23);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+}
+
+@utility brut {
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+@utility brut-thick {
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+@utility shadow-pop {
+  box-shadow: 4px 4px 0 0 var(--ink);
+}
+
+@utility shadow-pop-sm {
+  box-shadow: 2px 2px 0 0 var(--ink);
+}
+
+@utility shadow-pop-lg {
+  box-shadow: 6px 6px 0 0 var(--ink);
+}
+
+/* Marker sweep behind a key headline phrase */
+@utility sweep {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+@utility sweep-mark {
+  position: absolute;
+  left: -1%;
+  right: -1%;
+  bottom: 0;
+  height: 0.12em;
+  z-index: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  transform: rotate(-0.8deg);
+}
+
+/* Full-box marker for the reviews headline only: pale-yellow fill behind
+   black text so the phrase reads like a sticker on the dark collage. */
+@utility sweep-light {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  padding: 0 0.14em;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+@utility sweep-light-mark {
+  position: absolute;
+  inset: 4% -2% 2% -2%;
+  z-index: 0;
+  background: var(--soft-yellow);
+  border: 0.045em solid var(--paper);
+  border-radius: 0.18em;
+  box-shadow: 0.06em 0.06em 0 0 color-mix(in oklab, var(--paper) 65%, transparent);
+  transform: rotate(-1.2deg);
+}
+
+@layer utilities {
+  .display-xl {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .no-cursor {
+    cursor: none;
+  }
+}
+
+@keyframes zc-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes zc-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--lime) 65%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px color-mix(in oklab, var(--lime) 0%, transparent);
+  }
+}
+
+@keyframes zc-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes zc-wiggle {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+@keyframes zc-pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@utility animate-float {
+  animation: zc-float 5s ease-in-out infinite;
+}
+
+@utility animate-pulse-ring {
+  animation: zc-pulse-ring 1.6s ease-out infinite;
+}
+
+@utility animate-marquee {
+  animation: zc-marquee 26s linear infinite;
+}
+
+/* Infinite review collage — the track holds two identical copies so the
+   -50% translate loop is seamless; the viewport clips it to its band. */
+@utility marquee-viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+@utility marquee-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 1rem;
+  will-change: transform;
+}
+
+@utility animate-wiggle {
+  animation: zc-wiggle 3.5s ease-in-out infinite;
+}
+
+@utility animate-pop {
+  animation: zc-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Interactive lift used on cards and tiles */
+@utility lift {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 var(--ink);
+  }
+}
+
+/* ---------------------------------------------------------------
+   404 page — "delisted product card"
+   Reuses the site's ink/paper/accent/coral tokens. The card drifts,
+   the puzzle tile glitches, the "out of stock" tag pops in, and the
+   terminal cursor blinks. All animations are turned off by the global
+   prefers-reduced-motion rule below.
+   --------------------------------------------------------------- */
+.dot-grid {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--ink) 22%, transparent) 1.4px,
+    transparent 1.4px
+  );
+  background-size: 26px 26px;
+}
+
+@keyframes zc-404-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes zc-404-glitch {
+  0%,
+  92%,
+  100% {
+    transform: translate(0, 0);
+    filter: none;
+  }
+  93% {
+    transform: translate(-2px, 1px);
+    filter: hue-rotate(20deg);
+  }
+  94% {
+    transform: translate(2px, -1px);
+  }
+  95% {
+    transform: translate(-1px, 0);
+    filter: none;
+  }
+}
+
+@keyframes zc-404-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes zc-404-pop {
+  from {
+    transform: scale(0) rotate(8deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(8deg);
+    opacity: 1;
+  }
+}
+
+@utility animate-404-drift {
+  animation: zc-404-drift 5s ease-in-out infinite;
+}
+
+@utility animate-404-glitch {
+  animation: zc-404-glitch 3.4s ease-in-out infinite;
+}
+
+@utility animate-404-blink {
+  animation: zc-404-blink 1s step-end infinite;
+}
+
+@utility animate-404-pop {
+  animation: zc-404-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) 0.1s backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Custom pointer
+   Position arrives as CSS variables from a single rAF loop, so pointer
+   movement only ever changes transforms — never layout, never React.
+   --------------------------------------------------------------- */
+html.cursor-hidden,
+html.cursor-hidden * {
+  cursor: none !important;
+}
+
+.cursor-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: var(--co, 0);
+}
+
+.cursor-ring,
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.cursor-ring {
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--lime) 55%, transparent);
+  transform: translate3d(var(--rx, -100px), var(--ry, -100px), 0) rotate(var(--ra, 0deg))
+    scale(calc(var(--rs, 1) * var(--rsx, 1)), calc(var(--rs, 1) * var(--rsy, 1)));
+  transition:
+    background-color 180ms ease,
+    border-radius 180ms ease,
+    border-color 180ms ease;
+}
+
+.cursor-dot {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 999px;
+  background-color: var(--ink);
+  transform: translate3d(var(--cx, -100px), var(--cy, -100px), 0);
+  transition: opacity 160ms ease;
+}
+
+/* Over links and buttons: the ring opens up and the dot steps back. */
+.cursor-root[data-mode="link"] .cursor-ring {
+  background-color: var(--lime);
+  border-color: var(--ink);
+  border-radius: 12px;
+}
+.cursor-root[data-mode="link"] .cursor-dot {
+  opacity: 0;
+}
+
+/* Over text fields: a slim caret instead of a ring. */
+.cursor-root[data-mode="text"] .cursor-ring {
+  background-color: var(--ink);
+  border-color: transparent;
+  border-radius: 2px;
+}
+.cursor-root[data-mode="text"] .cursor-dot {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------
+   Structural backdrop patterns (replaces the old floating icons)
+   --------------------------------------------------------------- */
+.grid-lines {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--ink) 8%, transparent) 2px, transparent 2px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--ink) 8%, transparent) 2px, transparent 2px);
+  background-size: 64px 64px;
+}
+
+.hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklab, var(--ink) 10%, transparent) 0 2px,
+    transparent 2px 12px
+  );
+}
+
+/* Slow bezel motion keeps the hero lively without competing with the copy. */
+.hero-bezel-field {
+  z-index: 0;
+  opacity: 0.62;
+}
+
+.hero-bezel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 2px solid color-mix(in oklab, var(--ink) 8%, transparent);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.hero-bezel::after {
+  position: absolute;
+  inset: -2px;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  content: "";
+}
+
+.hero-bezel-outer {
+  width: min(980px, 88vw);
+  height: 520px;
+}
+
+.hero-bezel-middle {
+  width: min(760px, 70vw);
+  height: 430px;
+}
+
+.hero-bezel-inner {
+  width: min(520px, 50vw);
+  height: 310px;
+}
+
+.hero-bezel-cyan::after {
+  border-right-color: color-mix(in oklab, var(--accent-hover) 48%, transparent);
+}
+
+.hero-bezel-lime::after {
+  border-bottom-color: color-mix(in oklab, var(--lime) 38%, transparent);
+}
+
+.hero-bezel-soft::after {
+  border-left-color: color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.hero-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper-elevated);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hero-badge::before {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.hero-badge-left {
+  left: 10%;
+  top: 40%;
+}
+
+.hero-badge-right {
+  right: 10%;
+  top: 34%;
+  background: var(--soft-mint);
+}
+
+.hero-badge-bottom-left {
+  bottom: 15%;
+  left: 18%;
+  background: var(--soft-yellow);
+}
+
+.hero-badge-bottom-right {
+  right: 18%;
+  bottom: 14%;
+  background: var(--lime-tint);
+}
+
+.hero-preview {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--paper-elevated) 78%, transparent);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.hero-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--paper-elevated);
+}
+
+@media (max-width: 1023px) {
+  .hero-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-preview {
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+}
+
+/* ---------------------------------------------------------------
+   Extra motion primitives
+   --------------------------------------------------------------- */
+@keyframes zc-tilt-in {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+@keyframes zc-shimmer {
+  0% {
+    background-position: -140% 0;
+  }
+  100% {
+    background-position: 240% 0;
+  }
+}
+
+@keyframes zc-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes zc-ticker {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes zc-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes zc-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 44px 44px;
+  }
+}
+
+@utility animate-tilt-in {
+  animation: zc-tilt-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in oklab, var(--lime) 55%, transparent) 45%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: zc-shimmer 2.6s linear infinite;
+}
+
+@utility animate-draw {
+  transform-origin: left;
+  animation: zc-draw 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-ticker {
+  animation: zc-ticker 18s linear infinite;
+}
+
+@utility animate-blink {
+  animation: zc-blink 1.1s steps(1) infinite;
+}
+
+/* Dot-grid paper backdrop that slowly drifts */
+@utility grid-paper {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--ink) 14%, transparent) 1.4px,
+    transparent 1.4px
+  );
+  background-size: 22px 22px;
+  animation: zc-drift 30s linear infinite;
+}
+
+/* Underline that draws in on hover */
+@utility link-draw {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+/* Card that presses in when clicked */
+@utility press {
+  transition:
+    transform 130ms ease,
+    box-shadow 130ms ease;
+  &:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 0 var(--ink);
+  }
+}
+
+@keyframes zc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zc-page {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Small entrance for list items and inline states */
+@utility animate-rise {
+  animation: zc-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Subtle page-level transition on client-side navigation — a soft rise + fade. */
+@utility page-transition {
+  animation: zc-page 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Subtle nudge on hover — used on pills, chips and secondary links */
+@utility hover-nudge {
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.reveal-item {
+  opacity: 1;
+  transform: none;
+}
+
+/* Kept for backward compatibility with any inline data-shown usage. Content is
+   always visible by default so LCP/SEO never wait on a transitioned-in item. */
+.reveal-item[data-shown="true"],
+.reveal-stagger[data-shown="true"] > .reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Ruled band used on section edges: a repeating 6-step opacity ramp that was
+   previously applied through inline styles (rule-band spans). */
+.rule-band > span:nth-child(6n + 1) {
+  opacity: 0.25;
+}
+.rule-band > span:nth-child(6n + 2) {
+  opacity: 0.375;
+}
+.rule-band > span:nth-child(6n + 3) {
+  opacity: 0.5;
+}
+.rule-band > span:nth-child(6n + 4) {
+  opacity: 0.625;
+}
+.rule-band > span:nth-child(6n + 5) {
+  opacity: 0.75;
+}
+.rule-band > span:nth-child(6n) {
+  opacity: 0.875;
+}
+
+/* Checkout return: a quiet entrance, a drawn check and a short celebration. */
+.thank-you-enter {
+  animation: thank-you-rise 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.thank-you-delay {
+  animation-delay: 140ms;
+}
+.thank-you-delay-more {
+  animation-delay: 280ms;
+}
+.thank-you-seal {
+  animation: thank-you-seal 900ms cubic-bezier(0.22, 1, 0.36, 1) 250ms both;
+}
+.thank-you-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 0;
+  animation: thank-you-draw 650ms ease 650ms both;
+}
+.thank-you-orbit {
+  position: absolute;
+  inset: -18px;
+  pointer-events: none;
+}
+.thank-you-orbit span {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink);
+  background: var(--accent);
+  animation: thank-you-confetti 2.4s ease-in-out 400ms both;
+}
+.thank-you-orbit span:nth-child(1) {
+  top: 8%;
+  left: -3%;
+  transform: rotate(20deg);
+}
+.thank-you-orbit span:nth-child(2) {
+  top: -3%;
+  right: 18%;
+  border-radius: 50%;
+  background: var(--soft-yellow);
+  animation-delay: 550ms;
+}
+.thank-you-orbit span:nth-child(3) {
+  bottom: 18%;
+  right: -3%;
+  transform: rotate(-20deg);
+  background: var(--soft-mint);
+  animation-delay: 700ms;
+}
+.thank-you-orbit span:nth-child(4) {
+  bottom: -3%;
+  left: 20%;
+  border-radius: 50%;
+  animation-delay: 850ms;
+}
+.thank-you-step {
+  transition: color 200ms ease;
+}
+.thank-you-step:hover {
+  color: var(--accent-hover);
+}
+@keyframes thank-you-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes thank-you-seal {
+  from {
+    opacity: 0;
+    transform: scale(0.75) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes thank-you-draw {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes thank-you-confetti {
+  0% {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  35% {
+    opacity: 1;
+    translate: 0 -6px;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thank-you-page *,
+  .thank-you-page *::before,
+  .thank-you-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Structural backdrop frames the checkout card without competing with its copy. */
+.thank-you-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.thank-you-halo {
+  position: absolute;
+  width: min(1100px, 150vw);
+  height: 850px;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklab, var(--accent) 18%, transparent),
+    color-mix(in oklab, var(--soft-mint) 35%, transparent) 42%,
+    transparent 72%
+  );
+}
+.thank-you-frame {
+  position: absolute;
+  width: 250px;
+  height: 340px;
+  border: 2px solid color-mix(in oklab, var(--ink) 12%, transparent);
+  border-radius: 28px;
+  background: color-mix(in oklab, var(--soft-mint) 24%, transparent);
+}
+.thank-you-frame::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border: 1px solid color-mix(in oklab, var(--ink) 9%, transparent);
+  border-radius: 18px;
+}
+.thank-you-frame-left {
+  top: 310px;
+  left: calc(50% - 560px);
+  transform: rotate(-12deg);
+}
+.thank-you-frame-right {
+  top: 430px;
+  right: calc(50% - 560px);
+  transform: rotate(12deg);
+  background: color-mix(in oklab, var(--soft-yellow) 28%, transparent);
+}
+.thank-you-detail {
+  position: absolute;
+  color: color-mix(in oklab, var(--ink) 35%, transparent);
+}
+.thank-you-detail-one {
+  top: 240px;
+  left: calc(50% - 460px);
+  font: 32px monospace;
+}
+.thank-you-detail-two {
+  top: 850px;
+  right: calc(50% - 430px);
+  font: 26px monospace;
+}
+.thank-you-detail-three {
+  top: 210px;
+  right: calc(50% - 440px);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--ink);
+  background: var(--soft-yellow);
+  border-radius: 50%;
+}
+.thank-you-detail-four {
+  top: 780px;
+  left: calc(50% - 440px);
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ink);
+  background: var(--accent);
+  transform: rotate(-15deg);
+}
+.thank-you-feature-card {
+  box-shadow:
+    5px 5px 0 var(--ink),
+    0 28px 70px -35px color-mix(in oklab, var(--ink) 45%, transparent);
+}
+.thank-you-card-header {
+  background-image: radial-gradient(ellipse at 50% 0%, #ffffff90, transparent 70%);
+}
+@media (max-width: 767px) {
+  .thank-you-frame {
+    width: 150px;
+    height: 240px;
+    opacity: 0.6;
+  }
+  .thank-you-frame-left {
+    left: -75px;
+    top: 300px;
+  }
+  .thank-you-frame-right {
+    right: -75px;
+    top: 550px;
+  }
+  .thank-you-detail {
+    display: none;
+  }
+}

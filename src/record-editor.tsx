@@ -22,6 +22,8 @@ import {
   type Field as FieldType,
 } from "./workspace-config";
 import { fieldValue, inputValue, slugify } from "./record-values";
+import { ImagePreview } from "./image-preview";
+import { imageSource, isImageField } from "./image-source";
 
 function RelationField({
   field,
@@ -109,6 +111,27 @@ function RelationField({
     </div>
   );
 }
+function RelationName({ name, value }: { name: string; value: string }) {
+  const relation = relations[name];
+  const [text, setText] = useState(value || "—");
+  useEffect(() => {
+    let active = true;
+    if (value)
+      void db!
+        .from(relation.table)
+        .select(relation.title)
+        .eq("id", value)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (active && data) setText((data as unknown as Row)[relation.title] || value);
+        });
+    return () => {
+      active = false;
+    };
+  }, [relation, value]);
+  return <>{text}</>;
+}
+
 export function RecordEditor({
   resource,
   row,
@@ -193,6 +216,14 @@ export function RecordEditor({
       }
       if (isNew && resource.fields.some((f) => f.name === "slug") && values.slug)
         payload.slug = values.slug;
+      for (const key of [
+        "cover_image_url",
+        "avatar_url",
+        ...(resource.name === "blog_media" ? ["url"] : []),
+      ]) {
+        if (payload[key] && !imageSource(String(payload[key]), SITE_URL))
+          throw new Error(`${label(key)} needs a valid HTTP or HTTPS image link.`);
+      }
       if (
         resource.name === "user_roles" &&
         row?.user_id === user.id &&
@@ -306,6 +337,17 @@ export function RecordEditor({
           )}
           {mode === "view" ? (
             <div className="record-preview">
+              <ImagePreview
+                value={String(
+                  values.cover_image_url ||
+                    values.cover_image_path ||
+                    values.avatar_url ||
+                    (resource.name === "blog_media" ? values.url : "") ||
+                    "",
+                )}
+                alt={String(values.cover_image_alt || values.alt || title)}
+                storage={!values.cover_image_url && !!values.cover_image_path}
+              />
               <div className="preview-heading">
                 <span className="workspace-kicker">{resource.singular}</span>
                 <h3>{title}</h3>
@@ -328,15 +370,21 @@ export function RecordEditor({
                     <div key={f.name}>
                       <dt>{label(f.name)}</dt>
                       <dd>
-                        {arrays.includes(f.name)
-                          ? String(values[f.name]).split("\n").join(" · ")
-                          : f.name.endsWith("_cents")
-                            ? `${values[f.name] || "0"} ${values.currency || row?.currency || "USD"}`
-                            : typeof values[f.name] === "boolean"
-                              ? values[f.name]
-                                ? "Yes"
-                                : "No"
-                              : String(values[f.name] || "—")}
+                        {relations[f.name] ? (
+                          <RelationName name={f.name} value={String(values[f.name] || "")} />
+                        ) : arrays.includes(f.name) ? (
+                          String(values[f.name]).split("\n").join(" · ")
+                        ) : f.name.endsWith("_cents") ? (
+                          `${values[f.name] || "0"} ${values.currency || row?.currency || "USD"}`
+                        ) : typeof values[f.name] === "boolean" ? (
+                          values[f.name] ? (
+                            "Yes"
+                          ) : (
+                            "No"
+                          )
+                        ) : (
+                          String(values[f.name] || "—")
+                        )}
                       </dd>
                     </div>
                   ))}
@@ -455,6 +503,14 @@ export function RecordEditor({
                               />
                             )}
                           </Field>
+                        )}
+                        {isImageField(f.name) && (
+                          <ImagePreview
+                            compact
+                            value={String(value)}
+                            alt={String(values.cover_image_alt || values.alt || "")}
+                            storage={f.name === "cover_image_path"}
+                          />
                         )}
                       </div>
                     );

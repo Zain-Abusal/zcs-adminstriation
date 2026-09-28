@@ -1,0 +1,70 @@
+// Centralized lucide icons — each icon is deep-imported from its own
+// module so the 1,690-export "lucide-react" barrel is never loaded. The barrel
+// forces the bundler to parse & transform every icon (the single biggest
+// driver of build memory), while deep imports load only the icons used.
+// Keep these exports alphabetized.
+export { default as AlertTriangle } from "lucide-react/dist/esm/icons/alert-triangle.js";
+export { default as ArrowLeft } from "lucide-react/dist/esm/icons/arrow-left.js";
+export { default as ArrowRight } from "lucide-react/dist/esm/icons/arrow-right.js";
+export { default as ArrowUp } from "lucide-react/dist/esm/icons/arrow-up.js";
+export { default as ArrowUpRight } from "lucide-react/dist/esm/icons/arrow-up-right.js";
+export { default as BookOpen } from "lucide-react/dist/esm/icons/book-open.js";
+export { default as Bot } from "lucide-react/dist/esm/icons/bot.js";
+export { default as Boxes } from "lucide-react/dist/esm/icons/boxes.js";
+export { default as Check } from "lucide-react/dist/esm/icons/check.js";
+export { default as CheckCircle2 } from "lucide-react/dist/esm/icons/check-circle-2.js";
+export { default as ChevronDown } from "lucide-react/dist/esm/icons/chevron-down.js";
+export { default as ChevronRight } from "lucide-react/dist/esm/icons/chevron-right.js";
+export { default as CircleDollarSign } from "lucide-react/dist/esm/icons/circle-dollar-sign.js";
+export { default as Clock } from "lucide-react/dist/esm/icons/clock.js";
+export { default as Cookie } from "lucide-react/dist/esm/icons/cookie.js";
+export { default as Copy } from "lucide-react/dist/esm/icons/copy.js";
+export { default as Download } from "lucide-react/dist/esm/icons/download.js";
+export { default as ExternalLink } from "lucide-react/dist/esm/icons/external-link.js";
+export { default as Facebook } from "lucide-react/dist/esm/icons/facebook.js";
+export { default as FileText } from "lucide-react/dist/esm/icons/file-text.js";
+export { default as Flame } from "lucide-react/dist/esm/icons/flame.js";
+export { default as Gauge } from "lucide-react/dist/esm/icons/gauge.js";
+export { default as GitBranch } from "lucide-react/dist/esm/icons/git-branch.js";
+export { default as Globe } from "lucide-react/dist/esm/icons/globe.js";
+export { default as HeartHandshake } from "lucide-react/dist/esm/icons/heart-handshake.js";
+export { default as HelpCircle } from "lucide-react/dist/esm/icons/help-circle.js";
+export { default as Infinity } from "lucide-react/dist/esm/icons/infinity.js";
+export { default as InfinityIcon } from "lucide-react/dist/esm/icons/infinity.js";
+export { default as Instagram } from "lucide-react/dist/esm/icons/instagram.js";
+export { default as KeyRound } from "lucide-react/dist/esm/icons/key-round.js";
+export { default as LayoutDashboard } from "lucide-react/dist/esm/icons/layout-dashboard.js";
+export { default as Linkedin } from "lucide-react/dist/esm/icons/linkedin.js";
+export { default as Loader2 } from "lucide-react/dist/esm/icons/loader-2.js";
+export { default as Mail } from "lucide-react/dist/esm/icons/mail.js";
+export { default as MailX } from "lucide-react/dist/esm/icons/mail-x.js";
+export { default as Megaphone } from "lucide-react/dist/esm/icons/megaphone.js";
+export { default as Menu } from "lucide-react/dist/esm/icons/menu.js";
+export { default as MessageCircle } from "lucide-react/dist/esm/icons/message-circle.js";
+export { default as MessageSquare } from "lucide-react/dist/esm/icons/message-square.js";
+export { default as MessagesSquare } from "lucide-react/dist/esm/icons/messages-square.js";
+export { default as Package } from "lucide-react/dist/esm/icons/package.js";
+export { default as Plus } from "lucide-react/dist/esm/icons/plus.js";
+export { default as RefreshCw } from "lucide-react/dist/esm/icons/refresh-cw.js";
+export { default as Save } from "lucide-react/dist/esm/icons/save.js";
+export { default as Scale } from "lucide-react/dist/esm/icons/scale.js";
+export { default as Search } from "lucide-react/dist/esm/icons/search.js";
+export { default as ShieldCheck } from "lucide-react/dist/esm/icons/shield-check.js";
+export { default as ShoppingCart } from "lucide-react/dist/esm/icons/shopping-cart.js";
+export { default as Star } from "lucide-react/dist/esm/icons/star.js";
+export { default as Tag } from "lucide-react/dist/esm/icons/tag.js";
+export { default as Terminal } from "lucide-react/dist/esm/icons/terminal.js";
+export { default as TicketPercent } from "lucide-react/dist/esm/icons/ticket-percent.js";
+export { default as Timer } from "lucide-react/dist/esm/icons/timer.js";
+export { default as Trash2 } from "lucide-react/dist/esm/icons/trash-2.js";
+export { default as Twitter } from "lucide-react/dist/esm/icons/twitter.js";
+export { default as Upload } from "lucide-react/dist/esm/icons/upload.js";
+export { default as Users } from "lucide-react/dist/esm/icons/users.js";
+export { default as Wallet } from "lucide-react/dist/esm/icons/wallet.js";
+export { default as X } from "lucide-react/dist/esm/icons/x.js";
+export { default as XCircle } from "lucide-react/dist/esm/icons/x-circle.js";
+export { default as Youtube } from "lucide-react/dist/esm/icons/youtube.js";
+
+export { default as Eye } from "lucide-react/dist/esm/icons/eye.js";
+export { default as EyeOff } from "lucide-react/dist/esm/icons/eye-off.js";
+export { default as Lock } from "lucide-react/dist/esm/icons/lock.js";

@@ -30,6 +30,7 @@ import { resources, label, displayValue, type Resource, type Row } from "./works
 import { searchFilter } from "./record-values";
 import { RecordEditor } from "./record-editor";
 import { Storage } from "./storage";
+import { Analytics } from "./analytics";
 import "./workspace.css";
 const primary = ["overview", "products", "custom_requests"];
 const groupIcons = {
@@ -61,6 +62,9 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
     return () => window.removeEventListener("hashchange", change);
   }, []);
   const resource = resources.find((r) => r.name === section);
+  useEffect(() => {
+    if (resource && resource.group in groupIcons) setOpenGroup(resource.group);
+  }, [resource]);
   useEffect(() => {
     document.title = `${resource?.label || (section === "storage" ? "Files" : "Overview")} · ZCraft Admin`;
   }, [section, resource]);
@@ -193,6 +197,8 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             <Overview navigate={navigate} create={setQuickCreate} />
           ) : section === "storage" ? (
             <Storage />
+          ) : section === "page_view_daily" || section === "blog_reads" ? (
+            <Analytics key={section} name={section} />
           ) : resource ? (
             <Collection key={section} resource={resource} />
           ) : null}
@@ -340,6 +346,7 @@ function Overview({
           </button>
         ))}
       </div>
+      <Analytics name="page_view_daily" compact />
       <div className="overview-columns">
         <section className="workspace-card">
           <div className="card-heading">
@@ -521,7 +528,10 @@ function Collection({ resource }: { resource: Resource }) {
     [revision, setRevision] = useState(0),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
-  const [editor, setEditor] = useState<{ row: Row | null; mode: "view" | "edit" } | null>(null);
+  const [editor, setEditor] = useState<{
+    row: Row | null;
+    mode: "view" | "edit";
+  } | null>(null);
   const { toast } = useToast();
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -568,8 +578,22 @@ function Collection({ resource }: { resource: Resource }) {
           .range(page * pageSize, page * pageSize + pageSize - 1)
           .abortSignal(controller.signal);
         if (error) throw error;
+        let resolvedRows: Row[] = data || [];
+        if (resource.name === "user_roles" && resolvedRows.length) {
+          const profiles = await db!
+            .from("profiles")
+            .select("id,email")
+            .in(
+              "id",
+              resolvedRows.map((r) => r.user_id),
+            );
+          resolvedRows = resolvedRows.map((r) => ({
+            ...r,
+            account_email: profiles.data?.find((p) => p.id === r.user_id)?.email || r.user_id,
+          }));
+        }
         if (active) {
-          setRows(data || []);
+          setRows(resolvedRows);
           setCount(count || 0);
           if (page > 0 && !data?.length) setPage((p) => p - 1);
         }
@@ -588,17 +612,23 @@ function Collection({ resource }: { resource: Resource }) {
     if (resource.name !== "products") return;
     const id = sessionStorage.getItem("admin:open-product");
     if (!id) return;
-    sessionStorage.removeItem("admin:open-product");
     let active = true;
     void (async () => {
       try {
         await requireAdmin();
         const { data, error } = await db!.from("products").select("*").eq("id", id).single();
         if (error) throw error;
-        if (active) setEditor({ row: data, mode: "edit" });
+        if (active) {
+          sessionStorage.removeItem("admin:open-product");
+          setEditor({ row: data, mode: "edit" });
+        }
       } catch (e) {
         if (active)
-          toast({ title: "Could not open product", description: errorMessage(e), tone: "error" });
+          toast({
+            title: "Could not open product",
+            description: errorMessage(e),
+            tone: "error",
+          });
       }
     })();
     return () => {
@@ -608,7 +638,7 @@ function Collection({ resource }: { resource: Resource }) {
   function title(row: Row) {
     if (resource.name === "site_settings") return "Website announcement";
     if (resource.name === "sale_entries") return row.products?.title || "Sale product";
-    if (resource.name === "user_roles") return "Account access";
+    if (resource.name === "user_roles") return row.account_email || "Account access";
     return String(row[resource.title] || `Untitled ${resource.singular}`);
   }
   return (
@@ -786,7 +816,10 @@ function Collection({ resource }: { resource: Resource }) {
                       <button
                         className="row-edit"
                         onClick={() =>
-                          setEditor({ row, mode: resource.mode === "read" ? "view" : "edit" })
+                          setEditor({
+                            row,
+                            mode: resource.mode === "read" ? "view" : "edit",
+                          })
                         }
                       >
                         {resource.mode === "read" ? "View" : "Edit"}

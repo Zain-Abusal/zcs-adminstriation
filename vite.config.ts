@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ["react", "react-dom"],
-    alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) },
+    alias: { "@": fileURLToPath(new URL("./src/shared", import.meta.url)) },
   },
   build: { sourcemap: false },
 });
