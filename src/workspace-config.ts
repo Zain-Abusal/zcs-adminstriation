@@ -25,7 +25,6 @@ export type Resource = {
 // Explicit allowlist based on the storefront's current reads and relationships.
 // Legacy commerce tables stay in Supabase, outside the everyday workspace.
 export const archivedResources = [
-  "orders",
   "order_items",
   "licenses",
   "downloads",
@@ -36,6 +35,18 @@ export const archivedResources = [
 const definitions: Array<
   Omit<Resource, "fields" | "mode" | "order"> & Partial<Pick<Resource, "order" | "mode">>
 > = [
+  {
+    name: "orders",
+    label: "Orders",
+    singular: "order",
+    group: "Commerce",
+    description: "Create, prioritize, track, archive, and connect customer work to payment.",
+    title: "title",
+    columns: ["priority", "payment_status", "fulfillment_status", "total_cents", "due_at"],
+    search: ["title", "email", "customer_name", "internal_notes"],
+    status: "fulfillment_status",
+    mode: "write",
+  },
   {
     name: "products",
     label: "Products",
@@ -267,6 +278,18 @@ const definitions: Array<
     order: "sent_at",
   },
   {
+    name: "admin_security_events",
+    label: "Security events",
+    singular: "security event",
+    group: "Insights",
+    description: "Server-side admin API attempts, IP logging, and rate-limited actions.",
+    title: "event_type",
+    columns: ["ip_address", "actor_user_id", "created_at"],
+    search: ["event_type", "ip_hash", "user_agent"],
+    order: "created_at",
+    mode: "read",
+  },
+  {
     name: "site_settings",
     label: "Site announcement",
     singular: "announcement",
@@ -293,12 +316,49 @@ const bannerFields: Field[] = [
   { name: "banner_tone", type: "text", required: true, nullable: false },
   { name: "banner_content_md", type: "text", required: false, nullable: false },
 ];
+const orderFields: Field[] = [
+  { name: "title", type: "text", required: true, nullable: false },
+  { name: "customer_name", type: "text", required: false, nullable: true },
+  { name: "email", type: "text", required: false, nullable: true },
+  { name: "custom_request_id", type: "text", required: false, nullable: true },
+  { name: "priority", type: "text", required: false, nullable: false },
+  { name: "payment_status", type: "text", required: false, nullable: false },
+  { name: "fulfillment_status", type: "text", required: false, nullable: false },
+  { name: "provider", type: "text", required: false, nullable: false },
+  { name: "provider_order_id", type: "text", required: false, nullable: true },
+  { name: "subtotal_cents", type: "number", required: false, nullable: false },
+  { name: "discount_cents", type: "number", required: false, nullable: false },
+  { name: "total_cents", type: "number", required: false, nullable: false },
+  { name: "currency", type: "text", required: false, nullable: false },
+  { name: "coupon_code", type: "text", required: false, nullable: true },
+  { name: "ziina_payment_link_id", type: "text", required: false, nullable: true },
+  { name: "ziina_payment_url", type: "text", required: false, nullable: true },
+  { name: "due_at", type: "text", required: false, nullable: true },
+  { name: "completed_at", type: "text", required: false, nullable: true },
+  { name: "archived_at", type: "text", required: false, nullable: true },
+  { name: "deleted_at", type: "text", required: false, nullable: true },
+  { name: "internal_notes", type: "text", required: false, nullable: true },
+];
+const securityEventFields: Field[] = [
+  { name: "event_type", type: "text", required: true, nullable: false },
+  { name: "actor_user_id", type: "text", required: false, nullable: true },
+  { name: "ip_address", type: "text", required: false, nullable: true },
+  { name: "ip_hash", type: "text", required: false, nullable: true },
+  { name: "user_agent", type: "text", required: false, nullable: true },
+  { name: "metadata", type: "json", required: false, nullable: false },
+  { name: "created_at", type: "text", required: false, nullable: false },
+];
 export const resources: Resource[] = definitions.map((r) => {
   const table = schema.find((t) => t.name === r.name);
   return {
     ...r,
     mode: r.mode || table?.mode || "read",
-    fields: table?.fields || bannerFields,
+    fields:
+      r.name === "orders"
+        ? orderFields
+        : r.name === "admin_security_events"
+          ? securityEventFields
+          : table?.fields || bannerFields,
     order: r.order || "created_at",
   };
 });
@@ -343,6 +403,25 @@ export const fieldLabels: Record<string, string> = {
   purchase_count: "Purchases",
   download_count: "Downloads",
   full_name: "Full name",
+  title: "Order title",
+  customer_name: "Customer name",
+  custom_request_id: "Linked custom request",
+  priority: "Priority",
+  payment_status: "Payment",
+  fulfillment_status: "Completion",
+  internal_notes: "Internal notes",
+  due_at: "Due date",
+  completed_at: "Completed date",
+  archived_at: "Archived date",
+  deleted_at: "Deleted date",
+  ziina_payment_link_id: "Ziina payment link ID",
+  ziina_payment_url: "Ziina payment URL",
+  actor_user_id: "Admin account",
+  event_type: "Event",
+  ip_address: "IP address",
+  ip_hash: "IP hash",
+  user_agent: "User agent",
+  metadata: "Metadata",
 };
 export const label = (name: string) =>
   fieldLabels[name] || name.replaceAll("_", " ").replace(/^./, (c) => c.toUpperCase());
@@ -357,6 +436,8 @@ export const longFields = [
   "bio",
   "license_summary",
   "banner_content_md",
+  "internal_notes",
+  "user_agent",
 ];
 export const readonlyFields = ["view_count", "purchase_count", "download_count", "used_count"];
 export const relations: Record<string, { table: string; title: string }> = {
@@ -365,6 +446,8 @@ export const relations: Record<string, { table: string; title: string }> = {
   category_id: { table: "categories", title: "name" },
   sale_event_id: { table: "sale_events", title: "label" },
   user_id: { table: "profiles", title: "email" },
+  actor_user_id: { table: "profiles", title: "email" },
+  custom_request_id: { table: "custom_requests", title: "name" },
 };
 export const options: Record<string, string[]> = {
   role: ["admin", "moderator", "user"],
@@ -372,6 +455,10 @@ export const options: Record<string, string[]> = {
   cover_color: ["cyan", "yellow", "coral", "mint"],
   checkout_type: ["external", "free"],
   status: ["new", "in_progress", "completed", "closed"],
+  priority: ["low", "normal", "high", "urgent"],
+  payment_status: ["unpaid", "pending", "paid", "refunded"],
+  fulfillment_status: ["new", "in_progress", "completed", "closed"],
+  provider: ["manual", "ziina", "external"],
 };
 export const hints: Record<string, string> = {
   slug: "Used in the public page URL. Use lowercase words separated by hyphens.",
@@ -384,6 +471,8 @@ export const hints: Record<string, string> = {
   avatar_url: "A direct HTTP or HTTPS image link.",
   url: "A direct image link. External image hosts are supported.",
   storage_path: "Path to the file in the private product-files bucket.",
+  internal_notes: "Private studio notes. Never shown on the public website.",
+  ziina_payment_url: "Paste the Ziina payment link after creating it on the Ziina page.",
   links: "A JSON object mapping each social name to its URL.",
   banner_content_md: "Supports Markdown links, bold text, and emphasis.",
 };
@@ -399,10 +488,15 @@ export function fieldGroup(name: string) {
       "sort_order",
       "banner_enabled",
       "status",
+      "priority",
+      "payment_status",
+      "fulfillment_status",
+      "archived_at",
+      "completed_at",
     ].includes(name)
   )
     return "Visibility";
-  if (/price|currency|cadence|checkout|external_url|cta_|discount|starts_at|ends_at/.test(name))
+  if (/price|currency|cadence|checkout|external_url|cta_|discount|starts_at|ends_at|total|subtotal|coupon|provider|ziina|paid/.test(name))
     return "Pricing & links";
   if (/cover|image|avatar|storage_path|file_size|^url$|^alt$|caption/.test(name)) return "Media";
   if (longFields.includes(name) || arrays.includes(name)) return "Content";
@@ -432,6 +526,18 @@ export function newRecord(resource: Resource): Row {
       checkout_type: "external",
       product_type: "plugin",
       price_cents: 0,
+    });
+  if (resource.name === "orders")
+    Object.assign(row, {
+      status: "new",
+      priority: "normal",
+      payment_status: "unpaid",
+      fulfillment_status: "new",
+      provider: "manual",
+      subtotal_cents: 0,
+      discount_cents: 0,
+      total_cents: 0,
+      currency: "USD",
     });
   if (resource.name === "user_roles") row.role = "user";
   if (resource.name === "site_settings")

@@ -255,6 +255,25 @@ export function RecordEditor({
       setBusy(false);
     }
   }
+  async function archive() {
+    if (!row || !resource.fields.some((f) => f.name === "archived_at")) return;
+    const archived = !!row.archived_at;
+    setBusy(true);
+    setError("");
+    try {
+      await requireAdmin();
+      const payload = { archived_at: archived ? null : new Date().toISOString() };
+      const { data, error } = await db!.from(resource.name).update(payload).eq("id", row.id).select("id");
+      if (error) throw error;
+      if (!data?.length) throw new Error("Nothing was updated.");
+      toast({ title: archived ? `${label(resource.singular)} restored` : `${label(resource.singular)} archived` });
+      onSaved();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   async function remove() {
     if (
       !row ||
@@ -521,15 +540,28 @@ export function RecordEditor({
         </div>
         <footer className="record-actions">
           {!isNew && resource.mode === "write" ? (
-            <button
-              type="button"
-              className="danger-link"
-              disabled={busy}
-              onClick={() => void remove()}
-            >
-              <Trash2 />
-              Delete
-            </button>
+            <span className="record-danger-actions">
+              {resource.fields.some((f) => f.name === "archived_at") && (
+                <button
+                  type="button"
+                  className="danger-link"
+                  disabled={busy}
+                  onClick={() => void archive()}
+                >
+                  <Save />
+                  {row?.archived_at ? "Restore" : "Archive"}
+                </button>
+              )}
+              <button
+                type="button"
+                className="danger-link"
+                disabled={busy}
+                onClick={() => void remove()}
+              >
+                <Trash2 />
+                Delete
+              </button>
+            </span>
           ) : (
             <span />
           )}

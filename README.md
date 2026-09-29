@@ -23,6 +23,8 @@ Do not use a secret or service-role key in frontend configuration.
 - Build command: `npm run build`.
 - Output directory: `dist`.
 - Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for the deployment environment.
+- For Ziina, set server-only env vars: `ZIINA_API_KEY`, `ZIINA_PAYMENT_URL`, and `ZIINA_COMPLETED_PAYMENT_URL`.
+  Optional: `ZIINA_API_BASE_URL`, `ZIINA_TEST_MODE=true`, and `ADMIN_API_RATE_LIMIT`.
 - Commit `src/shared/`, `package-lock.json`, fonts, and image assets along with the application.
 
 There are no build-time imports from the original storefront and no requirement to include files outside this repository. The previous TS2307 errors came from `@/*` pointing to `../src`; it now points to `./src/shared/*`.
@@ -39,8 +41,13 @@ No-index metadata, robots.txt, and response headers are included. Enable Vercel 
 - Save/error toasts, unsaved-change protection, delete confirmation, keyboard-accessible dialogs, and reduced-motion support.
 - Page-traffic and article-engagement charts for 7/14/30/90 days, optional bot inclusion, top pages/articles, and accessible daily values. UTC date grouping. Reads are capped at 10,000 records with an explicit partial-data notice; use a shorter range when needed.
 - Announcement banner editing and existing-account role management.
+- Orders workspace for manual/custom-request orders, priority, paid/unpaid state, completion, internal notes, archive/restore, and delete.
+- Ziina hosted payment URL creation through a rate-limited serverless API. Ziina secrets are never bundled into the browser.
+- Read-only security events for admin API attempts, IP logging, and Ziina request status.
 
-Legacy orders, order items, licenses, downloads, coupons, product media, and changelog are intentionally excluded from navigation. No database tables are deleted. Existing user profiles remain available for account selectors. Paid checkout continues on external marketplaces.
+Legacy order items, licenses, downloads, coupons, product media, and changelog are intentionally excluded from navigation. No database tables are deleted. Existing user profiles remain available for account selectors.
+
+Run `supabase/admin-workspace-upgrades.sql` on the Supabase project before using the new order fields and optional API audit log.
 
 ## Database access
 

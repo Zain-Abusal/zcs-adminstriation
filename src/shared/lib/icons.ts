@@ -16,7 +16,9 @@ export { default as CheckCircle2 } from "lucide-react/dist/esm/icons/check-circl
 export { default as ChevronDown } from "lucide-react/dist/esm/icons/chevron-down.js";
 export { default as ChevronRight } from "lucide-react/dist/esm/icons/chevron-right.js";
 export { default as CircleDollarSign } from "lucide-react/dist/esm/icons/circle-dollar-sign.js";
+export { default as ClipboardList } from "lucide-react/dist/esm/icons/clipboard-list.js";
 export { default as Clock } from "lucide-react/dist/esm/icons/clock.js";
+export { default as CreditCard } from "lucide-react/dist/esm/icons/credit-card.js";
 export { default as Cookie } from "lucide-react/dist/esm/icons/cookie.js";
 export { default as Copy } from "lucide-react/dist/esm/icons/copy.js";
 export { default as Download } from "lucide-react/dist/esm/icons/download.js";

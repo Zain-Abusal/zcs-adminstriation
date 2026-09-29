@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/kit";
 import {
   Package,
+  ClipboardList,
   LayoutDashboard,
   MessageSquare,
   FileText,
@@ -21,19 +22,24 @@ import {
   Eye,
   Upload,
   Tag,
+  CreditCard,
 } from "@/lib/icons";
 import { SITE_URL } from "@/lib/site";
 import { useToast } from "@/lib/toast-context";
 import { db, requireAdmin } from "./client";
 import { errorMessage } from "./feedback";
-import { resources, label, displayValue, type Resource, type Row } from "./workspace-config";
+import { resources, label, displayValue, options, type Resource, type Row } from "./workspace-config";
 import { searchFilter } from "./record-values";
 import { RecordEditor } from "./record-editor";
 import { Storage } from "./storage";
 import { Analytics } from "./analytics";
+import { ZiinaPayments } from "./ziina";
 import "./workspace.css";
-const primary = ["overview", "products", "custom_requests"];
+const primary = ["overview", "orders", "products", "custom_requests"];
+const ordersResource = resources.find((r) => r.name === "orders")!;
+const productsResource = resources.find((r) => r.name === "products")!;
 const groupIcons = {
+  Commerce: CreditCard,
   Content: FileText,
   Catalog: Boxes,
   Community: Users,
@@ -43,7 +49,7 @@ const groupIcons = {
 const pageSize = 20;
 function currentSection() {
   const value = window.location.hash.slice(1).split("?")[0];
-  return ["overview", "storage", ...resources.map((r) => r.name)].includes(value)
+  return ["overview", "storage", "ziina", ...resources.map((r) => r.name)].includes(value)
     ? value
     : "overview";
 }
@@ -66,7 +72,9 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
     if (resource && resource.group in groupIcons) setOpenGroup(resource.group);
   }, [resource]);
   useEffect(() => {
-    document.title = `${resource?.label || (section === "storage" ? "Files" : "Overview")} · ZCraft Admin`;
+    document.title = `${
+      resource?.label || (section === "storage" ? "Files" : section === "ziina" ? "Ziina" : "Overview")
+    } · ZCraft Admin`;
   }, [section, resource]);
   return (
     <div className="studio-workspace workspace-shell">
@@ -89,7 +97,7 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
         <div className="sidebar-caption">WORKSPACE</div>
         <nav aria-label="Workspace navigation">
           {primary.map((key, i) => {
-            const Icon = [LayoutDashboard, Package, MessageSquare][i];
+            const Icon = [LayoutDashboard, ClipboardList, Package, MessageSquare][i];
             return (
               <a
                 key={key}
@@ -132,13 +140,22 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
                       </a>
                     ))}
                   {group === "Workspace" && (
-                    <a
-                      href="#storage"
-                      aria-current={section === "storage" ? "page" : undefined}
-                      onClick={() => setMobile(false)}
-                    >
-                      Files & uploads
-                    </a>
+                    <>
+                      <a
+                        href="#ziina"
+                        aria-current={section === "ziina" ? "page" : undefined}
+                        onClick={() => setMobile(false)}
+                      >
+                        Ziina payments
+                      </a>
+                      <a
+                        href="#storage"
+                        aria-current={section === "storage" ? "page" : undefined}
+                        onClick={() => setMobile(false)}
+                      >
+                        Files & uploads
+                      </a>
+                    </>
                   )}
                 </div>
               )}
@@ -174,7 +191,12 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             <span>Workspace</span>
             <ChevronRight />
             <strong>
-              {resource?.label || (section === "storage" ? "Files & uploads" : "Overview")}
+              {resource?.label ||
+                (section === "storage"
+                  ? "Files & uploads"
+                  : section === "ziina"
+                    ? "Ziina payments"
+                    : "Overview")}
             </strong>
           </div>
           <div className="topbar-actions">
@@ -184,9 +206,9 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             </span>
             <button
               className="icon-button"
-              aria-label="New product"
-              title="New product"
-              onClick={() => setQuickCreate(resources[0])}
+              aria-label="New order"
+              title="New order"
+              onClick={() => setQuickCreate(ordersResource)}
             >
               <Plus />
             </button>
@@ -197,6 +219,8 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             <Overview navigate={navigate} create={setQuickCreate} />
           ) : section === "storage" ? (
             <Storage />
+          ) : section === "ziina" ? (
+            <ZiinaPayments />
           ) : section === "page_view_daily" || section === "blog_reads" ? (
             <Analytics key={section} name={section} />
           ) : resource ? (
@@ -227,7 +251,7 @@ function Overview({
   navigate: (s: string) => void;
   create: (r: Resource) => void;
 }) {
-  const [stats, setStats] = useState<Array<number | null>>([null, null, null, null]),
+  const [stats, setStats] = useState<Array<number | null>>([null, null, null, null, null]),
     [products, setProducts] = useState<Row[]>([]),
     [requests, setRequests] = useState<Row[]>([]),
     [loading, setLoading] = useState(true),
@@ -254,6 +278,10 @@ function Overview({
             .select("id", { count: "exact", head: true })
             .eq("is_published", false),
           db!
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .not("fulfillment_status", "in", "(completed,closed)"),
+          db!
             .from("newsletter_subscribers")
             .select("id", { count: "exact", head: true })
             .eq("is_active", true),
@@ -270,9 +298,9 @@ function Overview({
             .limit(4),
         ]);
         if (!active) return;
-        setStats(results.slice(0, 4).map((r) => (r.error ? null : (r.count ?? 0))));
-        setProducts(results[4].data || []);
-        setRequests(results[5].data || []);
+        setStats(results.slice(0, 5).map((r) => (r.error ? null : (r.count ?? 0))));
+        setProducts(results[5].data || []);
+        setRequests(results[6].data || []);
         if (results.some((r) => r.error))
           setError("Some sections could not load. Check database access or retry.");
       } catch (e) {
@@ -295,9 +323,9 @@ function Overview({
           </h1>
           <p>A little less admin. More time to build.</p>
         </div>
-        <Button onClick={() => create(resources[0])}>
+        <Button onClick={() => create(ordersResource)}>
           <Plus />
-          New product
+          New order
         </Button>
       </div>
       {error && (
@@ -325,6 +353,12 @@ function Overview({
             target: "blog_posts",
             icon: FileText,
             note: "Your next story starts here",
+          },
+          {
+            label: "Open orders",
+            target: "orders",
+            icon: ClipboardList,
+            note: "Paid, unpaid, and in progress",
           },
           {
             label: "Subscribers",
@@ -386,7 +420,7 @@ function Overview({
             <Empty
               title="Your catalog starts here"
               description="Add your first product to get things moving."
-              action={() => create(resources[0])}
+              action={() => create(productsResource)}
               actionLabel="Create product"
             />
           )}
@@ -569,7 +603,7 @@ function Collection({ resource }: { resource: Resource }) {
         if (filter !== "all" && resource.status)
           query = query.eq(
             resource.status,
-            resource.status === "status" ? filter : filter === "true",
+            options[resource.status] ? filter : filter === "true",
           );
         query = query.order(sort === "az" ? resource.title : resource.order, {
           ascending: sort === "az" ? true : sort === "oldest" ? true : resource.ascending || false,
@@ -699,8 +733,8 @@ function Collection({ resource }: { resource: Resource }) {
                 }}
               >
                 <option value="all">All statuses</option>
-                {resource.status === "status" ? (
-                  ["new", "in_progress", "completed", "closed"].map((s) => (
+                {options[resource.status] ? (
+                  options[resource.status].map((s) => (
                     <option key={s} value={s}>
                       {label(s)}
                     </option>
