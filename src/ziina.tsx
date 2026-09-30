@@ -143,11 +143,21 @@ export function ZiinaPayments() {
       );
 
       if (!response.ok) {
-        throw new Error(
-          body.message ||
-            "Ziina could not create the payment link.",
-        );
-      }
+  const ziinaMessage =
+    typeof data?.message === "string"
+      ? data.message
+      : "Ziina rejected the payment request.";
+
+  const ziinaCode =
+    typeof data?.code === "string"
+      ? data.code
+      : undefined;
+
+  return json(res, response.status, {
+    message: ziinaMessage,
+    code: ziinaCode,
+  });
+}
 
       setLink(
         body.paymentLink || {},
