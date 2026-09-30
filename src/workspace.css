@@ -1633,3 +1633,63 @@
     transition: none !important;
   }
 }
+/* Ziina responsive layout fix */
+@media (max-width: 800px) {
+  .ziina-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ziina-layout > * {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ziina-form {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .ziina-form-card,
+  .ziina-result-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .ziina-result {
+    padding: 20px;
+  }
+
+  .ziina-result code,
+  .ziina-result a {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .ziina-layout {
+    gap: 14px;
+  }
+
+  .ziina-form {
+    padding: 16px;
+  }
+
+  .ziina-result {
+    padding: 16px;
+  }
+
+  .ziina-form-card .card-heading,
+  .ziina-result-card .card-heading {
+    padding: 18px 16px;
+  }
+}
