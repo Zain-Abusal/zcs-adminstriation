@@ -16,6 +16,8 @@ type PaymentLink = {
   redirectUrl?: string;
   embeddedUrl?: string;
   status?: string;
+  amount?: number;
+  currency?: string;
 };
 
 function resolvedUrl(link: PaymentLink) {
@@ -39,15 +41,58 @@ export function ZiinaPayments() {
   ) {
     e.preventDefault();
 
-    // Capture the actual form before any await.
-    const formElement = e.currentTarget;
-    const form = new FormData(formElement);
+    /*
+     * IMPORTANT:
+     * Capture FormData before any await.
+     * Otherwise React's currentTarget may no longer
+     * reference the form after an async operation.
+     */
+    const form = new FormData(e.currentTarget);
 
     setBusy(true);
     setError("");
     setLink(null);
 
     try {
+      const title = String(
+        form.get("title") || "",
+      ).trim();
+
+      const description = String(
+        form.get("description") || "",
+      ).trim();
+
+      const amount = Number(
+        form.get("amount") || 0,
+      );
+
+      const currency = String(
+        form.get("currency") || "AED",
+      )
+        .trim()
+        .toUpperCase();
+
+      if (!title) {
+        throw new Error(
+          "Please enter a payment title.",
+        );
+      }
+
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+        throw new Error(
+          "Amount must be greater than 0.",
+        );
+      }
+
+      if (!/^[A-Z]{3}$/.test(currency)) {
+        throw new Error(
+          "Currency must be a valid 3-letter code.",
+        );
+      }
+
       await requireAdmin();
 
       const session =
@@ -58,52 +103,7 @@ export function ZiinaPayments() {
 
       if (!token) {
         throw new Error(
-          "Please sign in again.",
-        );
-      }
-
-      const amount = Number(
-        form.get("amount") || 0,
-      );
-
-      const payload = {
-        title: String(
-          form.get("title") || "",
-        ).trim(),
-
-        description: String(
-          form.get("description") || "",
-        ).trim(),
-
-        amount,
-
-        currency: String(
-          form.get("currency") || "AED",
-        )
-          .trim()
-          .toUpperCase(),
-      };
-
-      if (!payload.title) {
-        throw new Error(
-          "Please enter a payment title.",
-        );
-      }
-
-      if (
-        !Number.isFinite(payload.amount) ||
-        payload.amount <= 0
-      ) {
-        throw new Error(
-          "Amount must be greater than 0.",
-        );
-      }
-
-      if (
-        !/^[A-Z]{3}$/.test(payload.currency)
-      ) {
-        throw new Error(
-          "Currency must be a 3-letter code.",
+          "Your session expired. Please sign in again.",
         );
       }
 
@@ -118,13 +118,21 @@ export function ZiinaPayments() {
               "application/json",
           },
 
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            title,
+            description,
+            amount,
+            currency,
+          }),
         },
       );
 
       const body = await response
         .json()
-        .catch(() => ({}));
+        .catch(() => ({
+          message:
+            "The server returned an invalid response.",
+        }));
 
       const remaining =
         response.headers.get(
@@ -136,34 +144,35 @@ export function ZiinaPayments() {
           "X-RateLimit-Limit",
         );
 
-      setRate(
-        remaining && limit
-          ? `${remaining} of ${limit} payment attempts left this minute`
-          : "",
-      );
+      if (remaining && limit) {
+        setRate(
+          `${remaining} of ${limit} payment attempts left this minute`,
+        );
+      } else {
+        setRate("");
+      }
 
       if (!response.ok) {
-  const ziinaMessage =
-    typeof data?.message === "string"
-      ? data.message
-      : "Ziina rejected the payment request.";
+        let message =
+          body?.message ||
+          "Ziina rejected the payment request.";
 
-  const ziinaCode =
-    typeof data?.code === "string"
-      ? data.code
-      : undefined;
+        if (body?.code) {
+          message += ` (${body.code})`;
+        }
 
-  return json(res, response.status, {
-    message: ziinaMessage,
-    code: ziinaCode,
-  });
-}
+        throw new Error(message);
+      }
 
-      setLink(
-        body.paymentLink || {},
-      );
-    } catch (e) {
-      setError(errorMessage(e));
+      if (!body?.paymentLink) {
+        throw new Error(
+          "Ziina returned a successful response but no payment link was provided.",
+        );
+      }
+
+      setLink(body.paymentLink);
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -202,10 +211,8 @@ export function ZiinaPayments() {
               </h2>
 
               <p>
-                Configure URLs and the API
-                key in env. The browser
-                never receives your Ziina
-                key.
+                Create a secure hosted
+                checkout through Ziina.
               </p>
             </div>
 
@@ -242,7 +249,7 @@ export function ZiinaPayments() {
 
             <Field
               label="Amount *"
-              hint="Entered as normal money, sent to Ziina in base units."
+              hint="Enter the normal amount, for example 4.99."
             >
               <input
                 className={inputClass}
@@ -251,16 +258,22 @@ export function ZiinaPayments() {
                 min="0.01"
                 step="0.01"
                 required
-                placeholder="25.00"
+                inputMode="decimal"
+                placeholder="4.99"
               />
             </Field>
 
-            <Field label="Currency">
+            <Field
+              label="Currency"
+              hint="For example AED or USD."
+            >
               <input
                 className={inputClass}
                 name="currency"
                 defaultValue="AED"
                 maxLength={3}
+                required
+                autoCapitalize="characters"
               />
             </Field>
 
@@ -269,6 +282,7 @@ export function ZiinaPayments() {
                 className={inputClass}
                 name="description"
                 rows={5}
+                maxLength={500}
                 placeholder="Short payment note for the customer."
               />
             </Field>
@@ -296,9 +310,8 @@ export function ZiinaPayments() {
               <h2>Result</h2>
 
               <p>
-                Only non-secret Ziina
-                response fields are shown
-                here.
+                Your generated payment link
+                will appear here.
               </p>
             </div>
 
@@ -317,12 +330,10 @@ export function ZiinaPayments() {
               {link.id && (
                 <p>
                   <strong>
-                    Payment link ID
+                    Payment ID
                   </strong>
 
-                  <code>
-                    {link.id}
-                  </code>
+                  <code>{link.id}</code>
                 </p>
               )}
 
@@ -355,7 +366,6 @@ export function ZiinaPayments() {
                   }
                 >
                   <Copy />
-
                   Copy payment URL
                 </Button>
               )}
@@ -369,9 +379,8 @@ export function ZiinaPayments() {
               <h3>No link yet</h3>
 
               <p>
-                Create a Ziina link and
-                attach it to an order when
-                it is ready.
+                Create a Ziina payment link
+                and it will appear here.
               </p>
             </div>
           )}
