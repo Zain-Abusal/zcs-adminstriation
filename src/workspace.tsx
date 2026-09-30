@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/kit";
 import {
   Package,
-  ClipboardList,
   LayoutDashboard,
   MessageSquare,
   FileText,
@@ -19,7 +18,6 @@ import {
   ArrowRight,
   Boxes,
   Mail,
-  Eye,
   Upload,
   Tag,
   CreditCard,
@@ -28,16 +26,26 @@ import { SITE_URL } from "@/lib/site";
 import { useToast } from "@/lib/toast-context";
 import { db, requireAdmin } from "./client";
 import { errorMessage } from "./feedback";
-import { resources, label, displayValue, options, type Resource, type Row } from "./workspace-config";
+import {
+  resources,
+  label,
+  displayValue,
+  options,
+  type Resource,
+  type Row,
+} from "./workspace-config";
 import { searchFilter } from "./record-values";
 import { RecordEditor } from "./record-editor";
 import { Storage } from "./storage";
 import { Analytics } from "./analytics";
 import { ZiinaPayments } from "./ziina";
 import "./workspace.css";
-const primary = ["overview", "orders", "products", "custom_requests"];
+
+const primary = ["overview", "products", "custom_requests"];
+
 const ordersResource = resources.find((r) => r.name === "orders")!;
 const productsResource = resources.find((r) => r.name === "products")!;
+
 const groupIcons = {
   Commerce: CreditCard,
   Content: FileText,
@@ -46,36 +54,75 @@ const groupIcons = {
   Insights: Gauge,
   Workspace: ShieldCheck,
 };
+
 const pageSize = 20;
+
 function currentSection() {
   const value = window.location.hash.slice(1).split("?")[0];
-  return ["overview", "storage", "ziina", ...resources.map((r) => r.name)].includes(value)
+
+  return [
+    "overview",
+    "storage",
+    "ziina",
+    ...resources.map((r) => r.name),
+  ].includes(value)
     ? value
     : "overview";
 }
-export function Dashboard({ identity, logout }: { identity: string; logout: () => void }) {
-  const [section, setSection] = useState(currentSection),
-    [mobile, setMobile] = useState(false),
-    [openGroup, setOpenGroup] = useState("Content");
+
+export function Dashboard({
+  identity,
+  logout,
+}: {
+  identity: string;
+  logout: () => void;
+}) {
+  const [section, setSection] = useState(currentSection);
+  const [mobile, setMobile] = useState(false);
+  const [openGroup, setOpenGroup] = useState("Content");
+
   const [quickCreate, setQuickCreate] = useState<Resource | null>(null);
+
   const navigate = (name: string) => {
     window.location.hash = name;
     setMobile(false);
   };
+
   useEffect(() => {
     const change = () => setSection(currentSection());
+
     window.addEventListener("hashchange", change);
+
     return () => window.removeEventListener("hashchange", change);
   }, []);
+
   const resource = resources.find((r) => r.name === section);
+
   useEffect(() => {
-    if (resource && resource.group in groupIcons) setOpenGroup(resource.group);
-  }, [resource]);
+    if (resource && resource.group in groupIcons) {
+      setOpenGroup(resource.group);
+    }
+
+    if (section === "ziina") {
+      setOpenGroup("Commerce");
+    }
+
+    if (section === "storage") {
+      setOpenGroup("Workspace");
+    }
+  }, [resource, section]);
+
   useEffect(() => {
     document.title = `${
-      resource?.label || (section === "storage" ? "Files" : section === "ziina" ? "Ziina" : "Overview")
+      resource?.label ||
+      (section === "storage"
+        ? "Files"
+        : section === "ziina"
+          ? "Make payment"
+          : "Overview")
     } · ZCraft Admin`;
   }, [section, resource]);
+
   return (
     <div className="studio-workspace workspace-shell">
       {mobile && (
@@ -85,19 +132,32 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
           onClick={() => setMobile(false)}
         />
       )}
+
       <aside className={`studio-sidebar ${mobile ? "is-open" : ""}`}>
-        <a className="studio-brand" href="#overview" onClick={() => setMobile(false)}>
+        <a
+          className="studio-brand"
+          href="#overview"
+          onClick={() => setMobile(false)}
+        >
           <span>
             <img src="/favicon.ico" alt="" />
           </span>
+
           <div>
             ZCraft <strong>Studio workspace</strong>
           </div>
         </a>
+
         <div className="sidebar-caption">WORKSPACE</div>
+
         <nav aria-label="Workspace navigation">
           {primary.map((key, i) => {
-            const Icon = [LayoutDashboard, ClipboardList, Package, MessageSquare][i];
+            const Icon = [
+              LayoutDashboard,
+              Package,
+              MessageSquare,
+            ][i];
+
             return (
               <a
                 key={key}
@@ -106,78 +166,122 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
                 onClick={() => setMobile(false)}
               >
                 <Icon />
+
                 <span>
-                  {key === "overview" ? "Overview" : resources.find((r) => r.name === key)?.label}
+                  {key === "overview"
+                    ? "Overview"
+                    : resources.find((r) => r.name === key)?.label}
                 </span>
-                {section === key && <span className="nav-active-dot" />}
+
+                {section === key && (
+                  <span className="nav-active-dot" />
+                )}
               </a>
             );
           })}
+
           <div className="sidebar-caption">MANAGE</div>
+
           {Object.entries(groupIcons).map(([group, Icon]) => (
             <div className="nav-group" key={group}>
               <button
                 className="nav-group-toggle"
                 aria-expanded={openGroup === group}
-                onClick={() => setOpenGroup((v) => (v === group ? "" : group))}
+                onClick={() =>
+                  setOpenGroup((v) => (v === group ? "" : group))
+                }
               >
                 <Icon />
                 <span>{group}</span>
-                <ChevronRight className={openGroup === group ? "rotated" : ""} />
+
+                <ChevronRight
+                  className={openGroup === group ? "rotated" : ""}
+                />
               </button>
+
               {openGroup === group && (
                 <div className="nav-group-items">
                   {resources
-                    .filter((r) => r.group === group && !primary.includes(r.name))
+                    .filter(
+                      (r) =>
+                        r.group === group &&
+                        !primary.includes(r.name),
+                    )
                     .map((r) => (
                       <a
                         key={r.name}
                         href={`#${r.name}`}
-                        aria-current={section === r.name ? "page" : undefined}
+                        aria-current={
+                          section === r.name ? "page" : undefined
+                        }
                         onClick={() => setMobile(false)}
                       >
                         {r.label}
                       </a>
                     ))}
-                  {group === "Workspace" && (
+
+                  {group === "Commerce" && (
                     <>
                       <a
                         href="#ziina"
-                        aria-current={section === "ziina" ? "page" : undefined}
+                        aria-current={
+                          section === "ziina" ? "page" : undefined
+                        }
                         onClick={() => setMobile(false)}
                       >
-                        Ziina payments
-                      </a>
-                      <a
-                        href="#storage"
-                        aria-current={section === "storage" ? "page" : undefined}
-                        onClick={() => setMobile(false)}
-                      >
-                        Files & uploads
+                        Make payment
                       </a>
                     </>
+                  )}
+
+                  {group === "Workspace" && (
+                    <a
+                      href="#storage"
+                      aria-current={
+                        section === "storage" ? "page" : undefined
+                      }
+                      onClick={() => setMobile(false)}
+                    >
+                      Files & uploads
+                    </a>
                   )}
                 </div>
               )}
             </div>
           ))}
         </nav>
-        <a className="sidebar-site-link" href={SITE_URL} target="_blank" rel="noreferrer">
+
+        <a
+          className="sidebar-site-link"
+          href={SITE_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
           <ExternalLink />
           Open storefront
           <ArrowRight />
         </a>
+
         <div className="sidebar-account">
-          <span className="account-avatar">{identity[0].toUpperCase()}</span>
+          <span className="account-avatar">
+            {identity[0].toUpperCase()}
+          </span>
+
           <div>
             <strong>Administrator</strong>
             <span title={identity}>{identity}</span>
           </div>
-          <button title="Sign out" aria-label="Sign out" onClick={logout}>
+
+          <button
+            title="Sign out"
+            aria-label="Sign out"
+            onClick={logout}
+          >
             <ArrowRight />
           </button>
         </div>
       </aside>
+
       <div className="studio-main">
         <header className="studio-topbar">
           <div className="topbar-breadcrumb">
@@ -188,22 +292,27 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             >
               <Menu />
             </button>
+
             <span>Workspace</span>
+
             <ChevronRight />
+
             <strong>
               {resource?.label ||
                 (section === "storage"
                   ? "Files & uploads"
                   : section === "ziina"
-                    ? "Ziina payments"
+                    ? "Make payment"
                     : "Overview")}
             </strong>
           </div>
+
           <div className="topbar-actions">
             <span className="admin-badge">
               <span />
               Admin access
             </span>
+
             <button
               className="icon-button"
               aria-label="New order"
@@ -214,20 +323,32 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             </button>
           </div>
         </header>
+
         <main className="studio-page">
           {section === "overview" ? (
-            <Overview navigate={navigate} create={setQuickCreate} />
+            <Overview
+              navigate={navigate}
+              create={setQuickCreate}
+            />
           ) : section === "storage" ? (
             <Storage />
           ) : section === "ziina" ? (
             <ZiinaPayments />
-          ) : section === "page_view_daily" || section === "blog_reads" ? (
-            <Analytics key={section} name={section} />
+          ) : section === "page_view_daily" ||
+            section === "blog_reads" ? (
+            <Analytics
+              key={section}
+              name={section}
+            />
           ) : resource ? (
-            <Collection key={section} resource={resource} />
+            <Collection
+              key={section}
+              resource={resource}
+            />
           ) : null}
         </main>
       </div>
+
       {quickCreate && (
         <RecordEditor
           resource={quickCreate}
@@ -237,13 +358,17 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
           onSaved={() => {
             setQuickCreate(null);
             navigate(quickCreate.name);
-            window.dispatchEvent(new Event("admin:refresh"));
+
+            window.dispatchEvent(
+              new Event("admin:refresh"),
+            );
           }}
         />
       )}
     </div>
   );
 }
+
 function Overview({
   navigate,
   create,
@@ -251,89 +376,165 @@ function Overview({
   navigate: (s: string) => void;
   create: (r: Resource) => void;
 }) {
-  const [stats, setStats] = useState<Array<number | null>>([null, null, null, null, null]),
-    [products, setProducts] = useState<Row[]>([]),
-    [requests, setRequests] = useState<Row[]>([]),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [refresh, setRefresh] = useState(0);
+  const [stats, setStats] = useState<
+    Array<number | null>
+  >([null, null, null, null, null]);
+
+  const [products, setProducts] = useState<Row[]>([]);
+  const [requests, setRequests] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
+
   useEffect(() => {
     let active = true;
+
     setLoading(true);
     setError("");
+
     void (async () => {
       try {
         await requireAdmin();
+
         const results = await Promise.all([
           db!
             .from("products")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+              count: "exact",
+              head: true,
+            })
             .eq("is_published", true),
+
           db!
             .from("custom_requests")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+              count: "exact",
+              head: true,
+            })
             .eq("status", "new"),
+
           db!
             .from("blog_posts")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+              count: "exact",
+              head: true,
+            })
             .eq("is_published", false),
+
           db!
             .from("orders")
-            .select("id", { count: "exact", head: true })
-            .not("fulfillment_status", "in", "(completed,closed)"),
+            .select("id", {
+              count: "exact",
+              head: true,
+            })
+            .not(
+              "fulfillment_status",
+              "in",
+              "(completed,closed)",
+            ),
+
           db!
             .from("newsletter_subscribers")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+              count: "exact",
+              head: true,
+            })
             .eq("is_active", true),
+
           db!
             .from("products")
-            .select("id,title,slug,summary,price_cents,currency,is_published,updated_at")
-            .order("updated_at", { ascending: false })
+            .select(
+              "id,title,slug,summary,price_cents,currency,is_published,updated_at",
+            )
+            .order("updated_at", {
+              ascending: false,
+            })
             .limit(5),
+
           db!
             .from("custom_requests")
-            .select("id,name,work_type,status,created_at")
+            .select(
+              "id,name,work_type,status,created_at",
+            )
             .eq("status", "new")
-            .order("created_at", { ascending: false })
+            .order("created_at", {
+              ascending: false,
+            })
             .limit(4),
         ]);
+
         if (!active) return;
-        setStats(results.slice(0, 5).map((r) => (r.error ? null : (r.count ?? 0))));
+
+        setStats(
+          results
+            .slice(0, 5)
+            .map((r) =>
+              r.error ? null : (r.count ?? 0),
+            ),
+        );
+
         setProducts(results[5].data || []);
         setRequests(results[6].data || []);
-        if (results.some((r) => r.error))
-          setError("Some sections could not load. Check database access or retry.");
+
+        if (results.some((r) => r.error)) {
+          setError(
+            "Some sections could not load. Check database access or retry.",
+          );
+        }
       } catch (e) {
-        if (active) setError(errorMessage(e));
+        if (active) {
+          setError(errorMessage(e));
+        }
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     })();
+
     return () => {
       active = false;
     };
   }, [refresh]);
+
   return (
     <>
       <div className="page-heading">
         <div>
-          <span className="workspace-kicker">YOUR STUDIO, AT A GLANCE</span>
+          <span className="workspace-kicker">
+            YOUR STUDIO, AT A GLANCE
+          </span>
+
           <h1>
             Let’s make something great<span>.</span>
           </h1>
+
           <p>A little less admin. More time to build.</p>
         </div>
+
         <Button onClick={() => create(ordersResource)}>
           <Plus />
           New order
         </Button>
       </div>
+
       {error && (
-        <div className="workspace-error" role="alert">
+        <div
+          className="workspace-error"
+          role="alert"
+        >
           {error}
-          <button onClick={() => setRefresh((v) => v + 1)}>Retry</button>
+
+          <button
+            onClick={() =>
+              setRefresh((v) => v + 1)
+            }
+          >
+            Retry
+          </button>
         </div>
       )}
+
       <div className="metric-grid">
         {[
           {
@@ -357,7 +558,7 @@ function Overview({
           {
             label: "Open orders",
             target: "orders",
-            icon: ClipboardList,
+            icon: CreditCard,
             note: "Paid, unpaid, and in progress",
           },
           {
@@ -367,12 +568,29 @@ function Overview({
             note: "Your active audience",
           },
         ].map((item, i) => (
-          <button className="metric-card" key={item.label} onClick={() => navigate(item.target)}>
-            <span className={`metric-icon tone-${i}`}>
+          <button
+            className="metric-card"
+            key={item.label}
+            onClick={() =>
+              navigate(item.target)
+            }
+          >
+            <span
+              className={`metric-icon tone-${i}`}
+            >
               <item.icon />
             </span>
-            <span className="metric-label">{item.label}</span>
-            <strong>{loading ? "…" : (stats[i] ?? "—")}</strong>
+
+            <span className="metric-label">
+              {item.label}
+            </span>
+
+            <strong>
+              {loading
+                ? "…"
+                : (stats[i] ?? "—")}
+            </strong>
+
             <small>
               {item.note}
               <ArrowRight />
@@ -380,7 +598,12 @@ function Overview({
           </button>
         ))}
       </div>
-      <Analytics name="page_view_daily" compact />
+
+      <Analytics
+        name="page_view_daily"
+        compact
+      />
+
       <div className="overview-columns">
         <section className="workspace-card">
           <div className="card-heading">
@@ -388,10 +611,17 @@ function Overview({
               <h2>Recently updated</h2>
               <p>Pick up where you left off.</p>
             </div>
-            <button className="text-link" onClick={() => navigate("products")}>
+
+            <button
+              className="text-link"
+              onClick={() =>
+                navigate("products")
+              }
+            >
               All products <ArrowRight />
             </button>
           </div>
+
           {loading ? (
             <Skeleton />
           ) : products.length ? (
@@ -401,17 +631,30 @@ function Overview({
                   key={p.id}
                   onClick={() => {
                     navigate("products");
-                    sessionStorage.setItem("admin:open-product", p.id);
+
+                    sessionStorage.setItem(
+                      "admin:open-product",
+                      p.id,
+                    );
                   }}
                 >
                   <span className="recent-icon">
                     <Package />
                   </span>
+
                   <span>
                     <strong>{p.title}</strong>
-                    <small>{p.summary || p.slug}</small>
+
+                    <small>
+                      {p.summary || p.slug}
+                    </small>
                   </span>
-                  <Status value={p.is_published} field="is_published" />
+
+                  <Status
+                    value={p.is_published}
+                    field="is_published"
+                  />
+
                   <ChevronRight />
                 </button>
               ))}
@@ -420,30 +663,46 @@ function Overview({
             <Empty
               title="Your catalog starts here"
               description="Add your first product to get things moving."
-              action={() => create(productsResource)}
+              action={() =>
+                create(productsResource)
+              }
               actionLabel="Create product"
             />
           )}
         </section>
+
         <section className="workspace-card">
           <div className="card-heading">
             <div>
               <h2>Needs your attention</h2>
               <p>The latest customer briefs.</p>
             </div>
-            <span className="count-pill">{stats[1] ?? "—"}</span>
+
+            <span className="count-pill">
+              {stats[1] ?? "—"}
+            </span>
           </div>
+
           {loading ? (
             <Skeleton />
           ) : requests.length ? (
             <div className="request-list">
               {requests.map((r) => (
-                <button key={r.id} onClick={() => navigate("custom_requests")}>
-                  <span className="request-avatar">{r.name?.[0] || "?"}</span>
+                <button
+                  key={r.id}
+                  onClick={() =>
+                    navigate("custom_requests")
+                  }
+                >
+                  <span className="request-avatar">
+                    {r.name?.[0] || "?"}
+                  </span>
+
                   <span>
                     <strong>{r.name}</strong>
                     <small>{r.work_type}</small>
                   </span>
+
                   <ChevronRight />
                 </button>
               ))}
@@ -454,46 +713,100 @@ function Overview({
               description="New customer requests will appear here."
             />
           )}
-          <button className="card-bottom-link" onClick={() => navigate("custom_requests")}>
+
+          <button
+            className="card-bottom-link"
+            onClick={() =>
+              navigate("custom_requests")
+            }
+          >
             Open request inbox <ArrowRight />
           </button>
         </section>
       </div>
+
       <section className="quick-actions">
         <div>
           <h2>Make your next move</h2>
-          <p>Small updates keep the studio moving.</p>
+          <p>
+            Small updates keep the studio moving.
+          </p>
         </div>
-        <button onClick={() => create(resources.find((r) => r.name === "blog_posts")!)}>
+
+        <button
+          onClick={() =>
+            create(
+              resources.find(
+                (r) => r.name === "blog_posts",
+              )!,
+            )
+          }
+        >
           <FileText />
+
           <span>
             <strong>Write a post</strong>
-            <small>Share a story or tutorial</small>
+            <small>
+              Share a story or tutorial
+            </small>
           </span>
+
           <Plus />
         </button>
-        <button onClick={() => navigate("site_settings")}>
+
+        <button
+          onClick={() =>
+            navigate("site_settings")
+          }
+        >
           <Tag />
+
           <span>
-            <strong>Update announcement</strong>
-            <small>Something worth sharing</small>
+            <strong>
+              Update announcement
+            </strong>
+            <small>
+              Something worth sharing
+            </small>
           </span>
+
           <ArrowRight />
         </button>
-        <button onClick={() => navigate("storage")}>
+
+        <button
+          onClick={() =>
+            navigate("storage")
+          }
+        >
           <Upload />
+
           <span>
             <strong>Upload assets</strong>
-            <small>Keep your files in order</small>
+            <small>
+              Keep your files in order
+            </small>
           </span>
+
           <ArrowRight />
         </button>
       </section>
     </>
   );
 }
-function Status({ value, field }: { value: any; field: string }) {
-  const positive = value === true || ["completed", "approved", "active"].includes(value);
+
+function Status({
+  value,
+  field,
+}: {
+  value: any;
+  field: string;
+}) {
+  const positive =
+    value === true ||
+    ["completed", "approved", "active"].includes(
+      value,
+    );
+
   const text =
     typeof value === "boolean"
       ? field === "is_published"
@@ -508,22 +821,33 @@ function Status({ value, field }: { value: any; field: string }) {
             ? "Active"
             : "Inactive"
       : label(String(value || "Unknown"));
+
   return (
-    <span className={`status-badge ${positive ? "positive" : "neutral"}`}>
+    <span
+      className={`status-badge ${
+        positive ? "positive" : "neutral"
+      }`}
+    >
       <span />
       {text}
     </span>
   );
 }
+
 function Skeleton() {
   return (
-    <div className="workspace-skeleton" role="status" aria-label="Loading records">
+    <div
+      className="workspace-skeleton"
+      role="status"
+      aria-label="Loading records"
+    >
       {[1, 2, 3, 4].map((i) => (
         <div key={i} />
       ))}
     </div>
   );
 }
+
 function Empty({
   title,
   description,
@@ -540,10 +864,15 @@ function Empty({
       <span>
         <Boxes />
       </span>
+
       <h3>{title}</h3>
       <p>{description}</p>
+
       {action && (
-        <Button tone="paper" onClick={action}>
+        <Button
+          tone="paper"
+          onClick={action}
+        >
           <Plus />
           {actionLabel}
         </Button>
@@ -551,43 +880,72 @@ function Empty({
     </div>
   );
 }
-function Collection({ resource }: { resource: Resource }) {
-  const [rows, setRows] = useState<Row[]>([]),
-    [count, setCount] = useState(0),
-    [page, setPage] = useState(0),
-    [search, setSearch] = useState(""),
-    [debounced, setDebounced] = useState(""),
-    [filter, setFilter] = useState("all"),
-    [sort, setSort] = useState("newest"),
-    [revision, setRevision] = useState(0),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState("");
+
+function Collection({
+  resource,
+}: {
+  resource: Resource;
+}) {
+  const [rows, setRows] = useState<Row[]>([]);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] =
+    useState("");
+  const [filter, setFilter] = useState("all");
+  const [sort, setSort] = useState("newest");
+  const [revision, setRevision] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [editor, setEditor] = useState<{
     row: Row | null;
     mode: "view" | "edit";
   } | null>(null);
+
   const { toast } = useToast();
-  const searchRef = useRef<HTMLInputElement>(null);
+
+  const searchRef =
+    useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounced(search);
       setPage(0);
     }, 250);
+
     return () => clearTimeout(timer);
   }, [search]);
+
   useEffect(() => {
-    const refresh = () => setRevision((v) => v + 1);
-    window.addEventListener("admin:refresh", refresh);
-    return () => window.removeEventListener("admin:refresh", refresh);
+    const refresh = () =>
+      setRevision((v) => v + 1);
+
+    window.addEventListener(
+      "admin:refresh",
+      refresh,
+    );
+
+    return () =>
+      window.removeEventListener(
+        "admin:refresh",
+        refresh,
+      );
   }, []);
+
   useEffect(() => {
     let active = true;
-    const controller = new AbortController();
+
+    const controller =
+      new AbortController();
+
     setLoading(true);
     setError("");
+
     void (async () => {
       try {
         await requireAdmin();
+
         let query = db!
           .from(resource.name)
           .select(
@@ -596,110 +954,256 @@ function Collection({ resource }: { resource: Resource }) {
               : resource.name === "user_roles"
                 ? "*"
                 : "*",
-            { count: "exact" },
+            {
+              count: "exact",
+            },
           );
-        if (debounced && resource.search.length)
-          query = query.or(searchFilter(resource.search, debounced));
-        if (filter !== "all" && resource.status)
+
+        if (
+          debounced &&
+          resource.search.length
+        ) {
+          query = query.or(
+            searchFilter(
+              resource.search,
+              debounced,
+            ),
+          );
+        }
+
+        if (
+          filter !== "all" &&
+          resource.status
+        ) {
           query = query.eq(
             resource.status,
-            options[resource.status] ? filter : filter === "true",
+            options[resource.status]
+              ? filter
+              : filter === "true",
           );
-        query = query.order(sort === "az" ? resource.title : resource.order, {
-          ascending: sort === "az" ? true : sort === "oldest" ? true : resource.ascending || false,
-        });
-        const { data, error, count } = await query
-          .range(page * pageSize, page * pageSize + pageSize - 1)
+        }
+
+        query = query.order(
+          sort === "az"
+            ? resource.title
+            : resource.order,
+          {
+            ascending:
+              sort === "az"
+                ? true
+                : sort === "oldest"
+                  ? true
+                  : resource.ascending || false,
+          },
+        );
+
+        const {
+          data,
+          error,
+          count,
+        } = await query
+          .range(
+            page * pageSize,
+            page * pageSize +
+              pageSize -
+              1,
+          )
           .abortSignal(controller.signal);
+
         if (error) throw error;
-        let resolvedRows: Row[] = data || [];
-        if (resource.name === "user_roles" && resolvedRows.length) {
+
+        let resolvedRows: Row[] =
+          data || [];
+
+        if (
+          resource.name === "user_roles" &&
+          resolvedRows.length
+        ) {
           const profiles = await db!
             .from("profiles")
             .select("id,email")
             .in(
               "id",
-              resolvedRows.map((r) => r.user_id),
+              resolvedRows.map(
+                (r) => r.user_id,
+              ),
             );
-          resolvedRows = resolvedRows.map((r) => ({
-            ...r,
-            account_email: profiles.data?.find((p) => p.id === r.user_id)?.email || r.user_id,
-          }));
+
+          resolvedRows = resolvedRows.map(
+            (r) => ({
+              ...r,
+              account_email:
+                profiles.data?.find(
+                  (p) =>
+                    p.id === r.user_id,
+                )?.email || r.user_id,
+            }),
+          );
         }
+
         if (active) {
           setRows(resolvedRows);
           setCount(count || 0);
-          if (page > 0 && !data?.length) setPage((p) => p - 1);
+
+          if (
+            page > 0 &&
+            !data?.length
+          ) {
+            setPage((p) => p - 1);
+          }
         }
       } catch (e) {
-        if (active) setError(errorMessage(e));
+        if (active) {
+          setError(errorMessage(e));
+        }
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     })();
+
     return () => {
       active = false;
       controller.abort();
     };
-  }, [resource, debounced, filter, sort, page, revision]);
+  }, [
+    resource,
+    debounced,
+    filter,
+    sort,
+    page,
+    revision,
+  ]);
+
   useEffect(() => {
-    if (resource.name !== "products") return;
-    const id = sessionStorage.getItem("admin:open-product");
+    if (resource.name !== "products") {
+      return;
+    }
+
+    const id = sessionStorage.getItem(
+      "admin:open-product",
+    );
+
     if (!id) return;
+
     let active = true;
+
     void (async () => {
       try {
         await requireAdmin();
-        const { data, error } = await db!.from("products").select("*").eq("id", id).single();
+
+        const { data, error } = await db!
+          .from("products")
+          .select("*")
+          .eq("id", id)
+          .single();
+
         if (error) throw error;
+
         if (active) {
-          sessionStorage.removeItem("admin:open-product");
-          setEditor({ row: data, mode: "edit" });
+          sessionStorage.removeItem(
+            "admin:open-product",
+          );
+
+          setEditor({
+            row: data,
+            mode: "edit",
+          });
         }
       } catch (e) {
-        if (active)
+        if (active) {
           toast({
-            title: "Could not open product",
-            description: errorMessage(e),
+            title:
+              "Could not open product",
+            description:
+              errorMessage(e),
             tone: "error",
           });
+        }
       }
     })();
+
     return () => {
       active = false;
     };
   }, [resource, toast]);
+
   function title(row: Row) {
-    if (resource.name === "site_settings") return "Website announcement";
-    if (resource.name === "sale_entries") return row.products?.title || "Sale product";
-    if (resource.name === "user_roles") return row.account_email || "Account access";
-    return String(row[resource.title] || `Untitled ${resource.singular}`);
+    if (
+      resource.name === "site_settings"
+    ) {
+      return "Website announcement";
+    }
+
+    if (
+      resource.name === "sale_entries"
+    ) {
+      return (
+        row.products?.title ||
+        "Sale product"
+      );
+    }
+
+    if (
+      resource.name === "user_roles"
+    ) {
+      return (
+        row.account_email ||
+        "Account access"
+      );
+    }
+
+    return String(
+      row[resource.title] ||
+        `Untitled ${resource.singular}`,
+    );
   }
+
   return (
     <>
       <div className="page-heading">
         <div>
-          <span className="workspace-kicker">{resource.group}</span>
+          <span className="workspace-kicker">
+            {resource.group}
+          </span>
+
           <h1>
             {resource.label}
-            <span className="heading-count">{loading ? "…" : count}</span>
+
+            <span className="heading-count">
+              {loading ? "…" : count}
+            </span>
           </h1>
+
           <p>{resource.description}</p>
         </div>
+
         {resource.mode === "write" && (
-          <Button onClick={() => setEditor({ row: null, mode: "edit" })}>
+          <Button
+            onClick={() =>
+              setEditor({
+                row: null,
+                mode: "edit",
+              })
+            }
+          >
             <Plus />
             Add {resource.singular}
           </Button>
         )}
       </div>
+
       <section className="workspace-card collection-card">
         <div className="collection-toolbar">
           <div className="collection-search">
             <Search />
+
             <input
               ref={searchRef}
-              disabled={!resource.search.length}
+              disabled={
+                !resource.search.length
+              }
               aria-label={`Search ${resource.label.toLowerCase()}`}
               placeholder={
                 resource.search.length
@@ -707,8 +1211,13 @@ function Collection({ resource }: { resource: Resource }) {
                   : "Browse records below"
               }
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value,
+                )
+              }
             />
+
             {search && (
               <button
                 className="icon-button"
@@ -722,36 +1231,54 @@ function Collection({ resource }: { resource: Resource }) {
               </button>
             )}
           </div>
+
           <div className="collection-controls">
             {resource.status && (
               <select
                 aria-label="Filter status"
                 value={filter}
                 onChange={(e) => {
-                  setFilter(e.target.value);
+                  setFilter(
+                    e.target.value,
+                  );
                   setPage(0);
                 }}
               >
-                <option value="all">All statuses</option>
-                {options[resource.status] ? (
-                  options[resource.status].map((s) => (
-                    <option key={s} value={s}>
+                <option value="all">
+                  All statuses
+                </option>
+
+                {options[
+                  resource.status
+                ] ? (
+                  options[
+                    resource.status
+                  ].map((s) => (
+                    <option
+                      key={s}
+                      value={s}
+                    >
                       {label(s)}
                     </option>
                   ))
                 ) : (
                   <>
                     <option value="true">
-                      {resource.status === "is_published"
+                      {resource.status ===
+                      "is_published"
                         ? "Published"
-                        : resource.status === "is_approved"
+                        : resource.status ===
+                            "is_approved"
                           ? "Approved"
                           : "Active"}
                     </option>
+
                     <option value="false">
-                      {resource.status === "is_published"
+                      {resource.status ===
+                      "is_published"
                         ? "Draft"
-                        : resource.status === "is_approved"
+                        : resource.status ===
+                            "is_approved"
                           ? "Pending"
                           : "Inactive"}
                     </option>
@@ -759,6 +1286,7 @@ function Collection({ resource }: { resource: Resource }) {
                 )}
               </select>
             )}
+
             <select
               aria-label="Sort records"
               value={sort}
@@ -768,25 +1296,62 @@ function Collection({ resource }: { resource: Resource }) {
               }}
             >
               <option value="newest">
-                {resource.ascending ? "Display order" : "Newest first"}
+                {resource.ascending
+                  ? "Display order"
+                  : "Newest first"}
               </option>
-              <option value="oldest">Oldest first</option>
-              {!["id", "user_id"].includes(resource.title) && <option value="az">A → Z</option>}
+
+              <option value="oldest">
+                Oldest first
+              </option>
+
+              {![
+                "id",
+                "user_id",
+              ].includes(
+                resource.title,
+              ) && (
+                <option value="az">
+                  A → Z
+                </option>
+              )}
             </select>
+
             <button
               className="icon-button"
               aria-label="Refresh records"
               disabled={loading}
-              onClick={() => setRevision((v) => v + 1)}
+              onClick={() =>
+                setRevision(
+                  (v) => v + 1,
+                )
+              }
             >
-              <RefreshCw className={loading ? "spin" : ""} />
+              <RefreshCw
+                className={
+                  loading ? "spin" : ""
+                }
+              />
             </button>
           </div>
         </div>
+
         {error ? (
-          <div className="workspace-error" role="alert">
+          <div
+            className="workspace-error"
+            role="alert"
+          >
             {error}
-            <button onClick={() => setRevision((v) => v + 1)}>Try again</button>
+
+            <button
+              onClick={() =>
+                setRevision(
+                  (v) => v + 1,
+                )
+              }
+            >
+              Try again
+            </button>
           </div>
         ) : loading ? (
           <Skeleton />
@@ -795,134 +1360,273 @@ function Collection({ resource }: { resource: Resource }) {
             <table className="collection-table">
               <thead>
                 <tr>
-                  <th>{resource.name === "products" ? "Product" : label(resource.singular)}</th>
-                  {resource.columns.map((c) => (
-                    <th key={c}>{label(c)}</th>
-                  ))}
                   <th>
-                    <span className="sr-only">Actions</span>
+                    {resource.name ===
+                    "products"
+                      ? "Product"
+                      : label(
+                          resource.singular,
+                        )}
+                  </th>
+
+                  {resource.columns.map(
+                    (c) => (
+                      <th key={c}>
+                        {label(c)}
+                      </th>
+                    ),
+                  )}
+
+                  <th>
+                    <span className="sr-only">
+                      Actions
+                    </span>
                   </th>
                 </tr>
               </thead>
+
               <tbody>
-                {rows.map((row, i) => (
-                  <tr key={row.id || i}>
-                    <td>
-                      <button
-                        className="record-title-button"
-                        onClick={() => setEditor({ row, mode: "view" })}
-                      >
-                        <span className="record-thumb">
-                          {resource.name === "products" ? (
-                            <Package />
-                          ) : resource.group === "Content" ? (
-                            <FileText />
-                          ) : resource.group === "Inbox" ? (
-                            <MessageSquare />
-                          ) : (
-                            <Boxes />
-                          )}
-                        </span>
-                        <span>
-                          <strong>{title(row)}</strong>
-                          <small>
-                            {resource.name === "sale_entries"
-                              ? row.sale_events?.label
-                              : row.slug || row.email || row.summary || ""}
-                          </small>
-                        </span>
-                      </button>
-                    </td>
-                    {resource.columns.map((c) => (
-                      <td key={c}>
-                        {typeof row[c] === "boolean" || c === "status" ? (
-                          <Status field={c} value={row[c]} />
-                        ) : c === "product_id" && row.products ? (
-                          row.products.title
-                        ) : (
-                          <span className={c.endsWith("_cents") ? "table-price" : ""}>
-                            {displayValue(c, row[c], row)}
+                {rows.map(
+                  (row, i) => (
+                    <tr
+                      key={
+                        row.id || i
+                      }
+                    >
+                      <td>
+                        <button
+                          className="record-title-button"
+                          onClick={() =>
+                            setEditor({
+                              row,
+                              mode: "view",
+                            })
+                          }
+                        >
+                          <span className="record-thumb">
+                            {resource.name ===
+                            "products" ? (
+                              <Package />
+                            ) : resource.group ===
+                              "Content" ? (
+                              <FileText />
+                            ) : resource.group ===
+                              "Inbox" ? (
+                              <MessageSquare />
+                            ) : (
+                              <Boxes />
+                            )}
                           </span>
-                        )}
+
+                          <span>
+                            <strong>
+                              {title(
+                                row,
+                              )}
+                            </strong>
+
+                            <small>
+                              {resource.name ===
+                              "sale_entries"
+                                ? row
+                                    .sale_events
+                                    ?.label
+                                : row.slug ||
+                                  row.email ||
+                                  row.summary ||
+                                  ""}
+                            </small>
+                          </span>
+                        </button>
                       </td>
-                    ))}
-                    <td>
-                      <button
-                        className="row-edit"
-                        onClick={() =>
-                          setEditor({
-                            row,
-                            mode: resource.mode === "read" ? "view" : "edit",
-                          })
-                        }
-                      >
-                        {resource.mode === "read" ? "View" : "Edit"}
-                        <ChevronRight />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+
+                      {resource.columns.map(
+                        (c) => (
+                          <td key={c}>
+                            {typeof row[
+                              c
+                            ] ===
+                              "boolean" ||
+                            c ===
+                              "status" ? (
+                              <Status
+                                field={c}
+                                value={
+                                  row[c]
+                                }
+                              />
+                            ) : c ===
+                                "product_id" &&
+                              row.products ? (
+                              row
+                                .products
+                                .title
+                            ) : (
+                              <span
+                                className={
+                                  c.endsWith(
+                                    "_cents",
+                                  )
+                                    ? "table-price"
+                                    : ""
+                                }
+                              >
+                                {displayValue(
+                                  c,
+                                  row[
+                                    c
+                                  ],
+                                  row,
+                                )}
+                              </span>
+                            )}
+                          </td>
+                        ),
+                      )}
+
+                      <td>
+                        <button
+                          className="row-edit"
+                          onClick={() =>
+                            setEditor({
+                              row,
+                              mode:
+                                resource.mode ===
+                                "read"
+                                  ? "view"
+                                  : "edit",
+                            })
+                          }
+                        >
+                          {resource.mode ===
+                          "read"
+                            ? "View"
+                            : "Edit"}
+
+                          <ChevronRight />
+                        </button>
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
         ) : (
           <Empty
             title={
-              search || filter !== "all"
+              search ||
+              filter !== "all"
                 ? "No matching records"
                 : `No ${resource.label.toLowerCase()} yet`
             }
             description={
-              search || filter !== "all"
+              search ||
+              filter !== "all"
                 ? "Try a different search or clear your filters."
                 : `Your ${resource.label.toLowerCase()} will appear here.`
             }
-            {...(resource.mode === "write"
+            {...(resource.mode ===
+            "write"
               ? {
-                  action: () => setEditor({ row: null, mode: "edit" }),
+                  action: () =>
+                    setEditor({
+                      row: null,
+                      mode: "edit",
+                    }),
                   actionLabel: `Add ${resource.singular}`,
                 }
               : {})}
           />
         )}
+
         <footer className="collection-pagination">
           <span>
             {count
-              ? `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, count)} of ${count}`
+              ? `${
+                  page *
+                    pageSize +
+                  1
+                }–${Math.min(
+                  (page + 1) *
+                    pageSize,
+                  count,
+                )} of ${count}`
               : "0 records"}
-            {debounced ? " matching your search" : ""}
+
+            {debounced
+              ? " matching your search"
+              : ""}
           </span>
+
           <div>
-            <button disabled={page === 0 || loading} onClick={() => setPage((p) => p - 1)}>
+            <button
+              disabled={
+                page === 0 ||
+                loading
+              }
+              onClick={() =>
+                setPage(
+                  (p) => p - 1,
+                )
+              }
+            >
               Previous
             </button>
+
             <span>
-              {page + 1} / {Math.max(1, Math.ceil(count / pageSize))}
+              {page + 1} /{" "}
+              {Math.max(
+                1,
+                Math.ceil(
+                  count /
+                    pageSize,
+                ),
+              )}
             </span>
+
             <button
-              disabled={(page + 1) * pageSize >= count || loading}
-              onClick={() => setPage((p) => p + 1)}
+              disabled={
+                (page + 1) *
+                  pageSize >=
+                  count ||
+                loading
+              }
+              onClick={() =>
+                setPage(
+                  (p) => p + 1,
+                )
+              }
             >
               Next
             </button>
           </div>
         </footer>
       </section>
+
       {resource.mode === "read" && (
         <p className="collection-footnote">
           <ShieldCheck />
           Read-only history. This section does not change website content.
         </p>
       )}
+
       {editor && (
         <RecordEditor
           resource={resource}
           row={editor.row}
-          initialMode={editor.mode}
-          onClose={() => setEditor(null)}
+          initialMode={
+            editor.mode
+          }
+          onClose={() =>
+            setEditor(null)
+          }
           onSaved={() => {
             setEditor(null);
-            setRevision((v) => v + 1);
+
+            setRevision(
+              (v) => v + 1,
+            );
           }}
         />
       )}
