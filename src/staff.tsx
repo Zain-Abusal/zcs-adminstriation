@@ -9,6 +9,7 @@ export const permissionPages = [
   ...resources
     .filter((r) => r.name !== "user_roles")
     .map((r) => ({ name: r.name, label: r.label, group: r.group, readOnly: r.mode === "read" })),
+  { name: "bbb_analytics", label: "BuiltByBit analytics", group: "Insights", readOnly: true },
   { name: "storage", label: "Files & uploads", group: "Workspace" },
   { name: "emails", label: "Email studio", group: "Community" },
   { name: "ziina", label: "Ziina payment links", group: "Commerce" },

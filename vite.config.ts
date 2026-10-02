@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => ({
       name: "drm-proxy",
       configureServer(server) {
         const env = { ...loadEnv(mode, process.cwd(), ""), ...process.env };
+        server.middlewares.use("/api/bbb-analytics", async (req, res) => {
+          const { handleBbbAnalytics } = await import("./server/bbb-analytics.mjs");
+          await handleBbbAnalytics(req, res, env);
+        });
         server.middlewares.use("/api/emails", async (req, res) => {
           const { handleEmails } = await import("./server/emails.mjs");
           await handleEmails(req, res, env);

@@ -137,3 +137,11 @@ Automatic announcements are queued once when news, blog posts or products become
 For unattended delivery, schedule authenticated `POST /api/emails` with body `{"action":"process"}` and `Authorization: Bearer <EMAIL_WORKER_SECRET>`. An authenticated `GET /api/emails?action=process` also supports Vercel Cron's `CRON_SECRET`. No scheduler is installed automatically. Each call processes at most one due job, with a four-message hourly queue limit.
 
 SMTP uses private BCC recipients and an explicit envelope. Messages include reply-to unsubscribe instructions; process these replies by deactivating the subscriber in Supabase. Submitted means SMTP acceptance, not confirmed delivery. Review the SMTP provider for delivery results. Timeouts and partial acceptance become uncertain and require manual reconciliation using the SMTP Message-ID, rather than an automatic resend. Failed jobs can be retried from the queue.
+
+### BuiltByBit analytics
+
+Open **Insights → BuiltByBit analytics** to select a metric, supported period, custom date range, and metric-specific filters. Periods use the shared list returned by BuiltByBit. The searchable product picker lists names and BBB IDs, supports multiple selections, and excludes unpublished drafts. Products with sales are shown by default; turn off “Products with sales only” to include published products with no purchases. The BBB token needs creator resource listing access; the synced DRM catalog is not used because it cannot verify publication status. Filters apply when you submit the form and remain applied on refresh. Graphs and total values use the corresponding BBB endpoints.
+
+Set `BBB_API_TOKEN` in the server environment (local `.env` or hosting environment), using a BuiltByBit API token with analytics access. This token is never sent to the browser. Apply `supabase/migrations/20261002150000_bbb_analytics_permission.sql` to the primary workspace database to enable assigning the separate read-only **BuiltByBit analytics** permission to staff. Existing administrators retain access.
+
+Reference: https://builtbybit.gitbook.io/api#get-v2-analytics

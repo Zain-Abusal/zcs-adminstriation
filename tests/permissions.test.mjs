@@ -53,6 +53,9 @@ test("real Postgres RLS enforces staff permissions, transactional grants, and au
       "utf8",
     );
     await db.exec(hardening);
+    await db.exec(
+      readFileSync("supabase/migrations/20261002150000_bbb_analytics_permission.sql", "utf8"),
+    );
     async function as(user) {
       await db.exec("reset role");
       await db.query("select set_config('request.jwt.claim.sub',$1,false)", [user]);
@@ -68,7 +71,17 @@ test("real Postgres RLS enforces staff permissions, transactional grants, and au
       ]);
       await as(staff);
     }
-    await save({ products: "read", orders: "edit", drm_requests: "read" });
+    await save({ products: "read", orders: "edit", drm_requests: "read", bbb_analytics: "read" });
+    assert.equal(
+      (await db.query("select public.workspace_can_access('bbb_analytics','read') as allowed"))
+        .rows[0].allowed,
+      true,
+    );
+    assert.equal(
+      (await db.query("select public.workspace_can_access('bbb_analytics','edit') as allowed"))
+        .rows[0].allowed,
+      false,
+    );
     assert.equal(
       (await db.query("select public.workspace_can_access('products','read') as allowed")).rows[0]
         .allowed,

@@ -39,6 +39,7 @@ import { filtersForPage, dateFilterValue } from "./page-filters";
 import { searchFilter } from "./record-values";
 import { RecordEditor } from "./record-editor";
 import { Storage } from "./storage";
+import { BbbAnalytics } from "./bbb-analytics";
 import { Analytics } from "./analytics";
 import { useAccess } from "./access";
 import { Emails } from "./emails";
@@ -73,6 +74,7 @@ function currentSection() {
     "drm",
     "staff",
     "emails",
+    "bbb_analytics",
     ...resources.map((r) => r.name),
   ].includes(value)
     ? value
@@ -108,6 +110,7 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
         "ziina",
         "storage",
         "emails",
+        "bbb_analytics",
       ].find(canView);
       if (first) window.location.hash = first;
     }
@@ -127,6 +130,7 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
       setOpenGroup(resource.group);
     }
 
+    if (section === "bbb_analytics") setOpenGroup("Insights");
     if (section === "emails") setOpenGroup("Community");
     if (section === "ziina") {
       setOpenGroup("Commerce");
@@ -140,6 +144,7 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
   useEffect(() => {
     document.title = `${
       resource?.label ||
+      (section === "bbb_analytics" ? "BuiltByBit analytics" : "") ||
       (section === "storage"
         ? "Files"
         : section === "ziina"
@@ -219,6 +224,7 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
               ([group]) =>
                 resources.some((r) => r.group === group && canView(r.name)) ||
                 (group === "Community" && canView("emails")) ||
+                (group === "Insights" && canView("bbb_analytics")) ||
                 (group === "Commerce" && canView("ziina")) ||
                 (group === "Workspace" && (canView("staff") || canView("storage"))),
             )
@@ -252,6 +258,15 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
                         </a>
                       ))}
 
+                    {group === "Insights" && canView("bbb_analytics") && (
+                      <a
+                        href="#bbb_analytics"
+                        aria-current={section === "bbb_analytics" ? "page" : undefined}
+                        onClick={() => setMobile(false)}
+                      >
+                        BuiltByBit analytics
+                      </a>
+                    )}
                     {group === "Community" && canView("emails") && (
                       <a
                         href="#emails"
@@ -389,6 +404,8 @@ export function Dashboard({ identity, logout }: { identity: string; logout: () =
             <Storage />
           ) : section === "ziina" ? (
             <ZiinaPayments />
+          ) : section === "bbb_analytics" ? (
+            <BbbAnalytics />
           ) : section === "page_view_daily" || section === "blog_reads" ? (
             <Analytics key={section} name={section} />
           ) : resource ? (

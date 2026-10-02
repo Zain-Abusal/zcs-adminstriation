@@ -254,15 +254,19 @@ export function Analytics({
     </section>
   );
 }
-function TimeChart({
+export function TimeChart({
   points,
   metric,
   label,
+  precision = 0,
 }: {
   points: Array<{ day: string; views: number; minutes: number }>;
   metric: "views" | "minutes";
   label: string;
+  precision?: number;
 }) {
+  const chartFormat = (value: number) =>
+    new Intl.NumberFormat("en", { maximumFractionDigits: precision }).format(value);
   const id = useId().replaceAll(":", "");
   const [focused, setFocused] = useState<number | null>(null);
   const width = 900,
@@ -310,7 +314,7 @@ function TimeChart({
               textAnchor="end"
               className="chart-axis"
             >
-              {format(roundedMax * (1 - f))}
+              {chartFormat(roundedMax * (1 - f))}
             </text>
           </g>
         ))}
@@ -352,7 +356,7 @@ function TimeChart({
             strokeWidth="2"
             tabIndex={i === (focused ?? coords.length - 1) ? 0 : -1}
             role="img"
-            aria-label={`${c.p.day}: ${format(c.p[metric])} ${label}`}
+            aria-label={`${c.p.day}: ${chartFormat(c.p[metric])} ${label}`}
             onKeyDown={(event) => {
               if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
               event.preventDefault();
@@ -374,14 +378,14 @@ function TimeChart({
             onMouseLeave={() => setFocused(null)}
           >
             <title>
-              {c.p.day}: {format(c.p[metric])} {label}
+              {c.p.day}: {chartFormat(c.p[metric])} {label}
             </title>
           </circle>
         ))}
       </svg>
       <div className="chart-tooltip" aria-live="polite">
         {active
-          ? `${active.p.day} · ${format(active.p[metric])} ${label.toLowerCase()}`
+          ? `${active.p.day} · ${chartFormat(active.p[metric])} ${label.toLowerCase()}`
           : "Hover a point, or focus the chart and use arrow keys"}
       </div>
     </div>
