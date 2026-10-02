@@ -91,3 +91,34 @@ test("edge and dashboard readers use the same database adapter", () => {
     readFileSync("supabase/functions/admin-drm-read/drm-database.mjs", "utf8"),
   );
 });
+
+test("primary token survives secondary gateway headers and still requires primary permission", async () => {
+  const original = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url: String(url), headers: options.headers });
+    return Response.json(calls.length === 1 ? { id: "primary-user" } : calls.length === 2 ? true : []);
+  };
+  try {
+    const response = await handler(new Request("https://edge.example?path=licenses", {
+      headers: { Authorization: "Bearer secondary-gateway-token", "x-workspace-authorization": "Bearer primary-user-token" },
+    }));
+    assert.equal(response.status, 200);
+    assert.equal(calls[0].headers.Authorization, "Bearer primary-user-token");
+    assert.equal(calls[1].headers.Authorization, "Bearer primary-user-token");
+    assert.ok(calls[0].url.startsWith("https://esrjajilhtjdleheettk.supabase.co/auth/"));
+    assert.equal(calls[2].headers.Authorization, "Bearer test-service-role");
+    const preflight = await handler(new Request("https://edge.example?path=licenses", { method: "OPTIONS" }));
+    assert.match(preflight.headers.get("access-control-allow-headers"), /x-workspace-authorization/);
+  } finally { globalThis.fetch = original; }
+});
+test("invalid primary session never reads the licensing database", async () => {
+  const original = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => { calls.push(String(url)); return Response.json({ error: "invalid session" }, { status: 401 }); };
+  try {
+    const response = await handler(new Request("https://edge.example?path=licenses", { headers: { "x-workspace-authorization": "Bearer invalid-primary-token" } }));
+    assert.equal(response.status, 401);
+    assert.ok(calls.every(url => !url.includes("secondary.example")));
+  } finally { globalThis.fetch = original; }
+});

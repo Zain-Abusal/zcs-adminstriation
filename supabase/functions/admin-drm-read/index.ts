@@ -3,7 +3,7 @@ const PRIMARY_URL = "https://esrjajilhtjdleheettk.supabase.co";
 const PRIMARY_KEY = "sb_publishable_CE_eX4Aj70h373NVim9TWw_-imMRBOl";
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info",
+  "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info,x-workspace-authorization",
   "Access-Control-Allow-Methods": "GET,OPTIONS",
   "Access-Control-Max-Age": "600",
   "Cache-Control": "private, no-store",
@@ -34,7 +34,8 @@ Deno.serve(async (req: Request) => {
         error: { message: e instanceof Error ? e.message : "Invalid filter." },
       });
     }
-    const authorization = req.headers.get("authorization") || "";
+    // Preserve the primary-project session independently of the secondary gateway.
+    const authorization = req.headers.get("x-workspace-authorization") ?? req.headers.get("authorization") ?? "";
     if (!/^Bearer \S+$/.test(authorization))
       return json(401, { ok: false, error: { message: "Please sign in again." } });
     const headers = {
@@ -56,6 +57,8 @@ Deno.serve(async (req: Request) => {
         redirect: "error",
       }),
     ]);
+    if (user.status >= 500)
+      return json(503, { ok: false, error: { message: "Workspace authentication is temporarily unavailable." } });
     if (!user.ok || !(await user.json()).id)
       return json(401, { ok: false, error: { message: "Please sign in again." } });
     if (!permission.ok)
