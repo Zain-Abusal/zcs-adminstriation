@@ -73,3 +73,67 @@ npm run build
 ```
 
 Tests cover field serialization, price conversion, search escaping, external image URLs, date ranges, and chart aggregation. Browser flows should use mocked data or a test project for writes; do not use production records as test fixtures.
+
+## Standalone DRM administration
+
+The DRM & licensing sidebar connects to the separate licensing API through `api/drm.mjs`. Set the server-only `LICENSE_ADMIN_API_TOKEN` to its existing 32-character token; `LICENSE_API_URL` defaults to `https://licenses.zcraftstudios.com`. Never prefix this token with `VITE_`. Your existing Supabase login and `workspace_can_access` protect each proxy request. API mode needs only the licensing API admin token.
+
+DRM collections retain records while refreshing in the background, refresh every minute while visible, and preload tabs on hover/focus. Record details open in a keyboard-accessible modal. Newly created/rotated keys appear only once and remain in component memory until dismissed. Local `npm run dev` includes the DRM proxy; Vercel executes the server function. Static `vite preview` cannot serve API requests.
+
+Review and testimonial sources use the storefront enum values `BuiltByBit`, `Trustpilot`, and `Other`. The storefront review-source migration must be applied to the connected database. Orders and Ziina use the existing commerce integration and `supabase/admin-workspace-upgrades.sql` requirements described above.
+
+
+## Staff accounts and page permissions
+
+Open **Workspace → Staff & permissions** as an existing administrator. Add an existing Supabase Auth user UUID and assign each page **No access**, **Read**, **Edit** (create/update), or **Manage** (also deletion and sensitive actions). Staff should not receive the `admin` role: administrators retain unrestricted access and can manage access. Disable an account here to immediately block its database/API workspace permissions; existing navigation refreshes within a minute. This does not disable the person's customer account.
+
+The primary project's staff schema and policies were installed during this implementation. Fresh projects should apply the files in `supabase/migrations/` once, in filename order, after the storefront schema and admin workspace upgrades. Do not replay them on the already-configured production project. Permission saves are transactional and changes are recorded in `workspace_permission_audit`; owners can see the latest 25 entries. Public storefront reads remain public; page permissions control workspace access. Privileged analytics retention is now restricted to backend service-role execution.
+
+Relevant collection pages include status, content, source, and UTC date filters. Exact text filters apply on blur/Enter; dropdowns apply immediately. DRM provides request method/status/route/request ID, validation outcome/reason, license status/customer, product flags, audit entity/action, search, and date filters.
+
+## Faster DRM reads from the second Supabase project
+
+The `admin-drm-read` Edge Function is installed in your ZCS License Supabase project. `VITE_DRM_SUPABASE_URL` and `VITE_DRM_SUPABASE_PUBLISHABLE_KEY` point the browser to this function and are prefilled in `.env` and `.env.example`; these values are public. Add them to Vercel's build environment when deploying the dashboard. You do not need to copy the second project's secret key to use this direct path.
+
+The DRM selector offers **Auto**, **Supabase database**, and **Licensing API**. With the public DRM connection configured, Auto and Supabase send reads directly from the browser to the authenticated Supabase endpoint. This skips the dashboard server and licensing API read hops. The endpoint verifies the primary project's bearer token and checks that user's page permissions on every request, then queries private `zcslic_*` tables with its built-in server credential. The primary publishable URL/key are pinned in the function's source; if rotated, update and redeploy it. Its gateway `verify_jwt` is disabled because the primary and DRM projects issue different JWTs; manual primary-project authentication and authorization are mandatory and tested. It accepts GET only, plus CORS preflight. No secret or license hash is exposed to the browser.
+
+License creation/rotation, IP resets, writes, and BuiltByBit sync continue through the licensing API so its transactional rules are preserved. In API mode, unsupported extra filters apply only to the current page and are labeled accordingly; native UUID filters retain collection scope. Supabase mode filters the complete dataset before pagination.
+
+Optional fallback: if the public Edge connection is omitted, the dashboard server can read Supabase directly using server-only `DRM_SUPABASE_URL` and `DRM_SUPABASE_SECRET_KEY`, or use the licensing API. `DRM_READ_SOURCE` configures that server's default. Never give server credentials a `VITE_` prefix. Restart the dev server or redeploy after changing configuration.
+
+The database adapter in `supabase/functions/admin-drm-read/drm-database.mjs` mirrors `server/drm-database.mjs`; a test checks that they match. Redeploy the function after adapter changes. Tests cover embedded Postgres permissions, read-only staff, disabled accounts, self-escalation attempts, API/database selection, safe column projections, and Edge authentication. Browser checks use mock users and records; no live customer records are used as write fixtures.
+
+## Database-backed filters
+
+Product filters use the actual `products.product_type` values and category names from `categories` (submitted as `category_id`). For example, **Minecraft Configs** selects its database UUID; **Minecraft Config** selects the exact product-type string. Neither is mapped to the old hardcoded `config` value. Other content filters load existing values too, and review product filters show product titles. Choices refresh when the collection is refreshed.
+
+`workspace_filter_options` is an authenticated, page-authorized RPC. Its private helper exposes only the small ID/label lists needed by the caller's permitted page; staff can filter products without receiving category-management access. Database RLS still protects collection queries.
+
+## Newsletter email studio
+
+Recipients come exclusively from active rows (`is_active = true`) in the primary Supabase `newsletter_subscribers` table. Addresses are normalized and deduplicated before sending. No external mailing lists or email API keys are needed.
+
+Supabase stores subscribers, permissions, automation settings and the durable email queue. [Supabase Auth SMTP](https://supabase.com/docs/guides/auth/auth-smtp) sends authentication messages; custom announcements use this application's server SMTP endpoint. You can copy the same SMTP provider credentials configured in Supabase Auth without resetting any existing API secrets.
+
+Find your primary project key in [ZCraft Studios → Settings → API Keys](https://supabase.com/dashboard/project/esrjajilhtjdleheettk/settings/api-keys). Copy or create a secret key (`sb_secret_...`) and set `SUPABASE_SECRET_KEY` in `.env` and Vercel. This does not require resetting existing keys. Restart the local dev server after editing `.env`.
+
+The studio includes editable Announcement, Maintenance, Alert, Product launch and Sale & offer templates matching the storefront’s paper background, ink header, mint/lime accents and typography. Personalize the subject, headline, message and button before applying a template; replacing an existing draft asks for confirmation. Email clients without the site fonts use safe fallback fonts. Applying a template never sends an email.
+
+Configure server environment variables locally and on Vercel:
+
+- `SUPABASE_SECRET_KEY`: primary project's server secret/service-role key.
+- `SMTP_HOST`, `SMTP_PORT` (587 for STARTTLS, 465 for implicit TLS), `SMTP_USER`, `SMTP_PASSWORD`.
+- `SMTP_FROM`: verified sender email; `SMTP_FROM_NAME`: optional sender name.
+- `SMTP_RECIPIENT_LIMIT`: maximum recipients per message, default 100, maximum 1000. Keep within your provider's limit; larger audiences fail before sending, with no truncation.
+- `PUBLIC_SITE_URL`: public website used in announcement links.
+- `EMAIL_WORKER_SECRET`: optional worker authentication secret.
+
+Keep all SMTP credentials and the Supabase secret server-only, without a `VITE_` prefix. Supabase does not expose your Auth SMTP password to this application, so SMTP credentials must be supplied explicitly.
+
+Apply the email and newsletter subscriber migrations. Automation starts paused. The Email studio supports manual HTML/text emails, a sandboxed preview, a review step, and a test sent only to the signed-in user's address. Staff need email edit permission to test and manage permission to send or configure automation.
+
+Automatic announcements are queued once when news, blog posts or products become published, or sales become active. Existing content is not backfilled. Scheduled announcements wait for their publish/start time; deleted or unpublished content is cancelled before submission.
+
+For unattended delivery, schedule authenticated `POST /api/emails` with body `{"action":"process"}` and `Authorization: Bearer <EMAIL_WORKER_SECRET>`. An authenticated `GET /api/emails?action=process` also supports Vercel Cron's `CRON_SECRET`. No scheduler is installed automatically. Each call processes at most one due job, with a four-message hourly queue limit.
+
+SMTP uses private BCC recipients and an explicit envelope. Messages include reply-to unsubscribe instructions; process these replies by deactivating the subscriber in Supabase. Submitted means SMTP acceptance, not confirmed delivery. Review the SMTP provider for delivery results. Timeouts and partial acceptance become uncertain and require manual reconciliation using the SMTP Message-ID, rather than an automatic resend. Failed jobs can be retried from the queue.

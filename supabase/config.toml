@@ -1,0 +1,4 @@
+# This function verifies the PRIMARY project's user token and page permissions itself.
+# The DRM project cannot verify a token issued by the primary project at its gateway.
+[functions.admin-drm-read]
+verify_jwt = false

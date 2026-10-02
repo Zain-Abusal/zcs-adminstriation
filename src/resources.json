@@ -602,6 +602,12 @@
         "type": "boolean",
         "required": false,
         "nullable": false
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "nullable": false
       }
     ]
   },
@@ -1482,6 +1488,12 @@
       {
         "name": "rating",
         "type": "number",
+        "required": false,
+        "nullable": false
+      },
+      {
+        "name": "source",
+        "type": "text",
         "required": false,
         "nullable": false
       }

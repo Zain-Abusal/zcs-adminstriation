@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Button, Panel, Field, SectionHeading, inputClass } from "@/components/kit";
 import { useToast } from "@/lib/toast-context";
-import { db, requireAdmin } from "./client";
+import { db, requireAccess } from "./client";
+import { useAccess } from "./access";
 import { errorMessage as message } from "./feedback";
 type Row = Record<string, any>;
 export function Storage() {
+  const access = useAccess();
   const { toast } = useToast();
   const [bucket, setBucket] = useState("product-images"),
     [prefix, setPrefix] = useState(""),
@@ -15,7 +17,7 @@ export function Storage() {
     setBusy(true);
     setError("");
     try {
-      await requireAdmin();
+      await requireAccess("storage");
       const { data, error } = await db!.storage.from(bucket).list(prefix, { limit: 100 });
       if (error) throw error;
       setFiles(data || []);
@@ -67,14 +69,14 @@ export function Storage() {
           <input
             className={inputClass}
             type="file"
-            disabled={busy}
+            disabled={busy || !access.can("storage", "edit")}
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
               setBusy(true);
               setError("");
               try {
-                await requireAdmin();
+                await requireAccess("storage", "edit");
                 const path = [prefix.replace(/^\/+|\/+$/g, ""), file.name]
                   .filter(Boolean)
                   .join("/");

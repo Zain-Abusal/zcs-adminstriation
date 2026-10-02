@@ -3,13 +3,16 @@ import { ArrowLeft, ArrowRight, Mail, ShieldCheck, Lock, Eye, EyeOff } from "@/l
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site";
 import { Button, Panel, Field, Eyebrow, Chip, SectionHeading, inputClass } from "@/components/kit";
-import { configured, db, requireAdmin, setupError } from "./client";
+import { configured, db, loadWorkspaceAccess, setupError } from "./client";
 const Dashboard = lazy(() => import("./workspace").then((m) => ({ default: m.Dashboard })));
 import { useToast } from "@/lib/toast-context";
+import { AccessContext } from "./access";
+import { noAccess, type WorkspaceAccess } from "./access-model";
 import { errorMessage as message } from "./feedback";
 export function App() {
   const { toast } = useToast();
   const [identity, setIdentity] = useState<string | null>(null);
+  const [access, setAccess] = useState<WorkspaceAccess>(noAccess);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -20,8 +23,11 @@ export function App() {
     async function verify() {
       const current = ++generation;
       try {
-        const user = await requireAdmin();
-        if (active && current === generation) setIdentity(user.email || user.id);
+        const { user, access } = await loadWorkspaceAccess();
+        if (active && current === generation) {
+          setIdentity(user.email || user.id);
+          setAccess(access);
+        }
       } catch {
         if (active && current === generation) setIdentity(null);
       } finally {
@@ -56,8 +62,9 @@ export function App() {
         password: String(data.get("password")),
       });
       if (result.error) throw result.error;
-      const user = await requireAdmin();
+      const { user, access } = await loadWorkspaceAccess();
       setIdentity(user.email || user.id);
+      setAccess(access);
       toast({
         title: "Signed in",
         description: "Your admin workspace is ready.",
@@ -201,14 +208,16 @@ export function App() {
         </main>
       }
     >
-      <Dashboard
-        identity={identity}
-        logout={async () => {
-          const result = await db!.auth.signOut();
-          setIdentity(null);
-          if (result.error) setError(result.error.message);
-        }}
-      />
+      <AccessContext.Provider value={access}>
+        <Dashboard
+          identity={identity}
+          logout={async () => {
+            const result = await db!.auth.signOut();
+            setIdentity(null);
+            if (result.error) setError(result.error.message);
+          }}
+        />
+      </AccessContext.Provider>
     </Suspense>
   );
 }

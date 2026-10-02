@@ -218,7 +218,7 @@ const definitions: Array<
     group: "Community",
     description: "Customer quotes featured on the home page.",
     title: "author_name",
-    columns: ["product_type", "rating", "is_active"],
+    columns: ["product_type", "rating", "source", "is_active"],
     search: ["author_name", "content"],
     status: "is_active",
   },
@@ -229,7 +229,7 @@ const definitions: Array<
     group: "Community",
     description: "Review customer feedback before it appears publicly.",
     title: "headline",
-    columns: ["author_name", "rating", "is_approved"],
+    columns: ["author_name", "rating", "source", "is_approved"],
     search: ["headline", "author_name"],
     status: "is_approved",
   },
@@ -514,6 +514,11 @@ export function fieldGroup(name: string) {
     return "Details";
   return "Basics";
 }
+export function fieldOptions(resource: Resource, name: string): string[] | undefined {
+  if (name === "source" && ["reviews", "homepage_reviews"].includes(resource.name))
+    return ["BuiltByBit", "Trustpilot", "Other"];
+  return options[name];
+}
 export function newRecord(resource: Resource): Row {
   const row: Row = {};
   for (const f of resource.fields) {
@@ -539,6 +544,7 @@ export function newRecord(resource: Resource): Row {
       total_cents: 0,
       currency: "USD",
     });
+  if (["reviews", "homepage_reviews"].includes(resource.name)) row.source = "Other";
   if (resource.name === "user_roles") row.role = "user";
   if (resource.name === "site_settings")
     Object.assign(row, { banner_tone: "cyan", banner_enabled: false });

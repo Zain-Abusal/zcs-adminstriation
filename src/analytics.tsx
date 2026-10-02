@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { ArrowRight, RefreshCw, Gauge } from "@/lib/icons";
-import { db, requireAdmin } from "./client";
+import { db, requireAccess } from "./client";
 import { errorMessage } from "./feedback";
 import { dateRange, summarize, type AnalyticsRow } from "./analytics-model";
 
@@ -28,7 +28,7 @@ export function Analytics({
     setError("");
     void (async () => {
       try {
-        await requireAdmin();
+        await requireAccess(name);
         const { start, end } = dateRange(days);
         const all: AnalyticsRow[] = [];
         let capped = false;

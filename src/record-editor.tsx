@@ -4,7 +4,7 @@ import { Markdown } from "@/components/markdown";
 import { X, Save, Eye, Plus, Trash2, ExternalLink, Loader2 } from "@/lib/icons";
 import { useToast } from "@/lib/toast-context";
 import { SITE_URL } from "@/lib/site";
-import { db, requireAdmin } from "./client";
+import { db, requireAdmin, requireAccess } from "./client";
 import { errorMessage } from "./feedback";
 import {
   arrays,
@@ -14,7 +14,7 @@ import {
   label,
   longFields,
   newRecord,
-  options,
+  fieldOptions,
   readonlyFields,
   relations,
   type Resource,
@@ -23,6 +23,8 @@ import {
 } from "./workspace-config";
 import { fieldValue, inputValue, slugify } from "./record-values";
 import { ImagePreview } from "./image-preview";
+import { emailRequest } from "./email-client";
+import { useAccess } from "./access";
 import { imageSource, isImageField } from "./image-source";
 
 function RelationField({
@@ -146,6 +148,7 @@ export function RecordEditor({
   onSaved: () => void;
 }) {
   const { toast } = useToast();
+  const access = useAccess();
   const dialog = useRef<HTMLDialogElement>(null);
   const isNew = row === null;
   const initial = useRef(row || newRecord(resource));
@@ -203,10 +206,11 @@ export function RecordEditor({
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (resource.mode === "read") return;
+    if (resource.mode === "read" || !access.can(resource.name, "edit")) return;
     setBusy(true);
     setError("");
     try {
+      await requireAccess(resource.name, "edit");
       const user = await requireAdmin();
       const payload: Row = {};
       for (const f of fields) {
@@ -246,6 +250,38 @@ export function RecordEditor({
         title: isNew ? `${label(resource.singular)} created` : "Changes saved",
         description: String(values[resource.title] || "Your changes are ready."),
       });
+      const emailKind = (
+        {
+          news_entries: "news",
+          blog_posts: "blog",
+          products: "product",
+          sale_events: "sale",
+          sales: "discount",
+        } as Record<string, string>
+      )[resource.name];
+      const publishField = resource.name === "sale_events" ? "is_active" : "is_published";
+      if (
+        emailKind &&
+        (isNew || payload[publishField] === true) &&
+        values[publishField] !== false
+      ) {
+        void emailRequest({ action: "dispatch", kind: emailKind, refId: result.data[0].id })
+          .then((result) => {
+            if (["failed", "uncertain"].includes(result.status))
+              toast({
+                title: "Content saved; email needs attention",
+                description: result.error || "Check the email queue.",
+                tone: "error",
+              });
+          })
+          .catch(() =>
+            toast({
+              title: "Content saved",
+              description: "Email delivery could not be checked. Review the queue in Email studio.",
+              tone: "error",
+            }),
+          );
+      }
       onSaved();
     } catch (e) {
       const text = errorMessage(e);
@@ -261,12 +297,20 @@ export function RecordEditor({
     setBusy(true);
     setError("");
     try {
-      await requireAdmin();
+      await requireAccess(resource.name, "edit");
       const payload = { archived_at: archived ? null : new Date().toISOString() };
-      const { data, error } = await db!.from(resource.name).update(payload).eq("id", row.id).select("id");
+      const { data, error } = await db!
+        .from(resource.name)
+        .update(payload)
+        .eq("id", row.id)
+        .select("id");
       if (error) throw error;
       if (!data?.length) throw new Error("Nothing was updated.");
-      toast({ title: archived ? `${label(resource.singular)} restored` : `${label(resource.singular)} archived` });
+      toast({
+        title: archived
+          ? `${label(resource.singular)} restored`
+          : `${label(resource.singular)} archived`,
+      });
       onSaved();
     } catch (e) {
       setError(errorMessage(e));
@@ -283,6 +327,7 @@ export function RecordEditor({
     setBusy(true);
     setError("");
     try {
+      await requireAccess(resource.name, "manage");
       const user = await requireAdmin();
       if (resource.name === "user_roles" && row.user_id === user.id && row.role === "admin")
         throw new Error("You cannot remove your own administrator access here.");
@@ -329,7 +374,7 @@ export function RecordEditor({
           <button type="button" aria-pressed={mode === "view"} onClick={() => setMode("view")}>
             <Eye /> Preview
           </button>
-          {resource.mode !== "read" && (
+          {resource.mode !== "read" && access.can(resource.name, "edit") && (
             <button type="button" aria-pressed={mode === "edit"} onClick={() => setMode("edit")}>
               <Save /> Edit details
             </button>
@@ -433,7 +478,7 @@ export function RecordEditor({
                   .filter((f) => fieldGroup(f.name) === activeTab)
                   .map((f) => {
                     const value = values[f.name];
-                    const choices = options[f.name];
+                    const choices = fieldOptions(resource, f.name);
                     const wide =
                       longFields.includes(f.name) ||
                       arrays.includes(f.name) ||
@@ -555,7 +600,7 @@ export function RecordEditor({
               <button
                 type="button"
                 className="danger-link"
-                disabled={busy}
+                disabled={busy || !access.can(resource.name, "manage")}
                 onClick={() => void remove()}
               >
                 <Trash2 />
@@ -569,7 +614,7 @@ export function RecordEditor({
             <Button type="button" tone="paper" disabled={busy} onClick={close}>
               {mode === "view" && !dirty ? "Close" : "Cancel"}
             </Button>
-            {resource.mode !== "read" && (
+            {resource.mode !== "read" && access.can(resource.name, "edit") && (
               <Button type="submit" disabled={busy || (!isNew && !dirty)}>
                 {busy ? <Loader2 className="spin" /> : isNew ? <Plus /> : <Save />}
                 {busy ? "Saving…" : isNew ? `Create ${resource.singular}` : "Save changes"}

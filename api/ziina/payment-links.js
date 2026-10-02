@@ -343,11 +343,8 @@ export default async function handler(
     userId = data.user.id;
 
     const role = await db.rpc(
-      "has_role",
-      {
-        _user_id: userId,
-        _role: "admin",
-      },
+      "workspace_can_access",
+      { page_key: "ziina", action_key: "edit" },
     );
 
     if (

@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/kit";
-import {
-  Copy,
-  CreditCard,
-  ExternalLink,
-  Loader2,
-  ShieldCheck,
-} from "@/lib/icons";
-import { db, requireAdmin } from "./client";
+import { Copy, CreditCard, ExternalLink, Loader2, ShieldCheck } from "@/lib/icons";
+import { db, requireAccess } from "./client";
+import { useAccess } from "./access";
 import { errorMessage } from "./feedback";
 
 type PaymentLink = {
@@ -21,24 +16,17 @@ type PaymentLink = {
 };
 
 function resolvedUrl(link: PaymentLink) {
-  return (
-    link.redirectUrl ||
-    link.url ||
-    link.embeddedUrl ||
-    ""
-  );
+  return link.redirectUrl || link.url || link.embeddedUrl || "";
 }
 
 export function ZiinaPayments() {
+  const access = useAccess();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [link, setLink] =
-    useState<PaymentLink | null>(null);
+  const [link, setLink] = useState<PaymentLink | null>(null);
   const [rate, setRate] = useState("");
 
-  async function create(
-    e: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function create(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     /*
@@ -54,108 +42,70 @@ export function ZiinaPayments() {
     setLink(null);
 
     try {
-      const title = String(
-        form.get("title") || "",
-      ).trim();
+      const title = String(form.get("title") || "").trim();
 
-      const description = String(
-        form.get("description") || "",
-      ).trim();
+      const description = String(form.get("description") || "").trim();
 
-      const amount = Number(
-        form.get("amount") || 0,
-      );
+      const amount = Number(form.get("amount") || 0);
 
-      const currency = String(
-        form.get("currency") || "AED",
-      )
+      const currency = String(form.get("currency") || "AED")
         .trim()
         .toUpperCase();
 
       if (!title) {
-        throw new Error(
-          "Please enter a payment title.",
-        );
+        throw new Error("Please enter a payment title.");
       }
 
-      if (
-        !Number.isFinite(amount) ||
-        amount <= 0
-      ) {
-        throw new Error(
-          "Amount must be greater than 0.",
-        );
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Amount must be greater than 0.");
       }
 
       if (!/^[A-Z]{3}$/.test(currency)) {
-        throw new Error(
-          "Currency must be a valid 3-letter code.",
-        );
+        throw new Error("Currency must be a valid 3-letter code.");
       }
 
-      await requireAdmin();
+      await requireAccess("ziina", "edit");
 
-      const session =
-        await db!.auth.getSession();
+      const session = await db!.auth.getSession();
 
-      const token =
-        session.data.session?.access_token;
+      const token = session.data.session?.access_token;
 
       if (!token) {
-        throw new Error(
-          "Your session expired. Please sign in again.",
-        );
+        throw new Error("Your session expired. Please sign in again.");
       }
 
-      const response = await fetch(
-        "/api/ziina/payment-links",
-        {
-          method: "POST",
+      const response = await fetch("/api/ziina/payment-links", {
+        method: "POST",
 
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            title,
-            description,
-            amount,
-            currency,
-          }),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
 
-      const body = await response
-        .json()
-        .catch(() => ({
-          message:
-            "The server returned an invalid response.",
-        }));
+        body: JSON.stringify({
+          title,
+          description,
+          amount,
+          currency,
+        }),
+      });
 
-      const remaining =
-        response.headers.get(
-          "X-RateLimit-Remaining",
-        );
+      const body = await response.json().catch(() => ({
+        message: "The server returned an invalid response.",
+      }));
 
-      const limit =
-        response.headers.get(
-          "X-RateLimit-Limit",
-        );
+      const remaining = response.headers.get("X-RateLimit-Remaining");
+
+      const limit = response.headers.get("X-RateLimit-Limit");
 
       if (remaining && limit) {
-        setRate(
-          `${remaining} of ${limit} payment attempts left this minute`,
-        );
+        setRate(`${remaining} of ${limit} payment attempts left this minute`);
       } else {
         setRate("");
       }
 
       if (!response.ok) {
-        let message =
-          body?.message ||
-          "Ziina rejected the payment request.";
+        let message = body?.message || "Ziina rejected the payment request.";
 
         if (body?.code) {
           message += ` (${body.code})`;
@@ -165,9 +115,7 @@ export function ZiinaPayments() {
       }
 
       if (!body?.paymentLink) {
-        throw new Error(
-          "Ziina returned a successful response but no payment link was provided.",
-        );
+        throw new Error("Ziina returned a successful response but no payment link was provided.");
       }
 
       setLink(body.paymentLink);
@@ -178,27 +126,17 @@ export function ZiinaPayments() {
     }
   }
 
-  const href = link
-    ? resolvedUrl(link)
-    : "";
+  const href = link ? resolvedUrl(link) : "";
 
   return (
     <section>
       <div className="page-heading">
         <div>
-          <span className="workspace-kicker">
-            PAYMENTS
-          </span>
+          <span className="workspace-kicker">PAYMENTS</span>
 
-          <h1>
-            Ziina payment links
-          </h1>
+          <h1>Ziina payment links</h1>
 
-          <p>
-            Create a hosted payment URL,
-            then paste it into the related
-            order.
-          </p>
+          <p>Create a hosted payment URL, then paste it into the related order.</p>
         </div>
       </div>
 
@@ -206,37 +144,22 @@ export function ZiinaPayments() {
         <section className="workspace-card ziina-form-card">
           <div className="card-heading">
             <div>
-              <h2>
-                New payment link
-              </h2>
+              <h2>New payment link</h2>
 
-              <p>
-                Create a secure hosted
-                checkout through Ziina.
-              </p>
+              <p>Create a secure hosted checkout through Ziina.</p>
             </div>
 
             <CreditCard />
           </div>
 
-          <form
-            onSubmit={create}
-            className="ziina-form"
-          >
+          <form onSubmit={create} className="ziina-form">
             {error && (
-              <div
-                className="workspace-error"
-                role="alert"
-              >
+              <div className="workspace-error" role="alert">
                 {error}
               </div>
             )}
 
-            {rate && (
-              <p className="ziina-rate-note">
-                {rate}
-              </p>
-            )}
+            {rate && <p className="ziina-rate-note">{rate}</p>}
 
             <Field label="Title *">
               <input
@@ -247,10 +170,7 @@ export function ZiinaPayments() {
               />
             </Field>
 
-            <Field
-              label="Amount *"
-              hint="Enter the normal amount, for example 4.99."
-            >
+            <Field label="Amount *" hint="Enter the normal amount, for example 4.99.">
               <input
                 className={inputClass}
                 name="amount"
@@ -263,10 +183,7 @@ export function ZiinaPayments() {
               />
             </Field>
 
-            <Field
-              label="Currency"
-              hint="For example AED or USD."
-            >
+            <Field label="Currency" hint="For example AED or USD.">
               <input
                 className={inputClass}
                 name="currency"
@@ -287,19 +204,10 @@ export function ZiinaPayments() {
               />
             </Field>
 
-            <Button
-              type="submit"
-              disabled={busy}
-            >
-              {busy ? (
-                <Loader2 className="spin" />
-              ) : (
-                <CreditCard />
-              )}
+            <Button type="submit" disabled={busy || !access.can("ziina", "edit")}>
+              {busy ? <Loader2 className="spin" /> : <CreditCard />}
 
-              {busy
-                ? "Creating link..."
-                : "Create payment link"}
+              {busy ? "Creating link..." : "Create payment link"}
             </Button>
           </form>
         </section>
@@ -309,10 +217,7 @@ export function ZiinaPayments() {
             <div>
               <h2>Result</h2>
 
-              <p>
-                Your generated payment link
-                will appear here.
-              </p>
+              <p>Your generated payment link will appear here.</p>
             </div>
 
             <ShieldCheck />
@@ -323,15 +228,12 @@ export function ZiinaPayments() {
               <span className="status-badge positive">
                 <span />
 
-                {link.status ||
-                  "Created"}
+                {link.status || "Created"}
               </span>
 
               {link.id && (
                 <p>
-                  <strong>
-                    Payment ID
-                  </strong>
+                  <strong>Payment ID</strong>
 
                   <code>{link.id}</code>
                 </p>
@@ -339,15 +241,9 @@ export function ZiinaPayments() {
 
               {href && (
                 <p>
-                  <strong>
-                    Payment URL
-                  </strong>
+                  <strong>Payment URL</strong>
 
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  <a href={href} target="_blank" rel="noreferrer">
                     {href}
 
                     <ExternalLink />
@@ -359,11 +255,7 @@ export function ZiinaPayments() {
                 <Button
                   type="button"
                   tone="paper"
-                  onClick={() =>
-                    void navigator.clipboard.writeText(
-                      href,
-                    )
-                  }
+                  onClick={() => void navigator.clipboard.writeText(href)}
                 >
                   <Copy />
                   Copy payment URL
@@ -378,10 +270,7 @@ export function ZiinaPayments() {
 
               <h3>No link yet</h3>
 
-              <p>
-                Create a Ziina payment link
-                and it will appear here.
-              </p>
+              <p>Create a Ziina payment link and it will appear here.</p>
             </div>
           )}
         </aside>
